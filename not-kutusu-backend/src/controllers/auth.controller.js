@@ -13,30 +13,23 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 // 🟢 Kayıt işlemi
 const register = async (req, res) => {
   try {
-    const { name, email, password, universityId, role } = req.body;
+    const { name, email, password, universityId, role, slug } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "İsim, e-posta ve şifre zorunludur." });
     }
 
-    // Şifre kurallarını kontrol et
-    if (!passwordRegex.test(password)) {
-      return res.status(400).json({
-        message:
-          "Şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir."
-      });
-    }
-
-    // Eğer user ise üniversite zorunlu + domain kontrolü
+    // Eğer user ise üniversite zorunlu + domain kontrolü + slug zorunlu
     if (role !== "admin") {
-      if (!universityId) {
-        return res.status(400).json({ message: "Üniversite ID zorunludur." });
+      if (!universityId || !slug) {
+        return res.status(400).json({ message: "Üniversite ID ve slug zorunludur." });
       }
 
       const domain = extractEmailDomain(email);
-      const university = await University.findById(universityId);
+      const university = await University.findOne({ _id: universityId, slug });
+
       if (!university) {
-        return res.status(400).json({ message: "Üniversite bulunamadı." });
+        return res.status(400).json({ message: "Üniversite bulunamadı veya slug hatalı." });
       }
 
       const normalizedDomains = university.emailDomains.map((d) =>
@@ -165,12 +158,11 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "E-posta ve şifre zorunludur." });
+      return res.status(400).json({ message: "E-posta ve şifre zorunludur." });
     }
 
-    const user = await User.findOne({ email });
+    // Üniversite slug bilgisini almak için populate kullanıyoruz
+    const user = await User.findOne({ email }).populate("universityId", "slug");
     if (!user) {
       return res.status(400).json({ message: "Kullanıcı bulunamadı." });
     }
@@ -196,7 +188,7 @@ const login = async (req, res) => {
 
     const token = generateToken({
       userId: user._id,
-      universityId: user.universityId,
+      universityId: user.universityId?._id,
       role: user.role
     });
 
@@ -207,8 +199,10 @@ const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        universityId: user.universityId,
-        role: user.role
+        role: user.role,
+        university: user.universityId
+          ? { id: user.universityId._id, slug: user.universityId.slug }
+          : null
       }
     });
   } catch (err) {
