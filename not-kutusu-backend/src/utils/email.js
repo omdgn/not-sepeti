@@ -1,0 +1,67 @@
+const nodemailer = require("nodemailer");
+
+// ✅ Transporter tanımı
+const transporter = nodemailer.createTransport({
+  service: "gmail", // Gmail SMTP
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// ✅ Bağlantı testi (başlangıçta 1 kez loglar)
+transporter.verify(function (error, success) {
+  if (error) {
+    console.error("❌ Email transporter bağlantı hatası:", error);
+  } else {
+    console.log("✅ Email servisine başarıyla bağlandı.");
+  }
+});
+
+// ✅ Doğrulama maili gönderimi
+const sendVerificationEmail = async (to, token) => {
+  const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+//  console.log("🔗 Doğrulama linki:", url);
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      replyTo: '"Not Kutusu" <notkutusuu@gmail.com>',
+      to,
+      subject: "E-posta Doğrulama",
+      html: `
+        <h2>Merhaba!</h2>
+        <p>Not Kutusu hesabınızı doğrulamak için aşağıdaki linke tıklayın:</p>
+        <a href="${url}">${url}</a>
+        <p>Bu link 10 dakika geçerlidir.</p>
+      `,
+    });
+    console.log("✅ Doğrulama maili gönderildi →", to);
+  } catch (err) {
+    console.error("❌ Doğrulama maili gönderme hatası:", err);
+  }
+};
+
+// ✅ Şifre sıfırlama maili gönderimi
+const sendResetPasswordEmail = async (to, token) => {
+  const url = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+//  console.log("🔗 Şifre sıfırlama linki:", url);
+  try {
+    await transporter.sendMail({
+      from: `"Not Kutusu" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: "Şifre Sıfırlama Talebi",
+      html: `
+        <h2>Merhaba!</h2>
+        <p>Şifrenizi sıfırlamak için aşağıdaki linke tıklayın:</p>
+        <a href="${url}">${url}</a>
+        <p>Bu bağlantı 1 saat geçerlidir.</p>
+      `,
+    });
+    console.log("✅ Şifre sıfırlama maili gönderildi →", to);
+  } catch (err) {
+    console.error("❌ Şifre sıfırlama maili gönderme hatası:", err);
+  }
+};
+
+
+module.exports = { sendVerificationEmail, sendResetPasswordEmail };
