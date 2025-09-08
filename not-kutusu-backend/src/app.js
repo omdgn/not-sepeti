@@ -40,6 +40,7 @@ const universityRoutes = require("./routes/university.routes");
 const { swaggerUi, swaggerSpec } = require("./swagger");
 const commentRoutes = require("./routes/comment.routes");
 const userRoutes = require("./routes/user.routes");
+const departmentCodeRoutes = require("./routes/departmentCode.routes");
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -49,6 +50,7 @@ app.use("/api", noteRoutes);
 app.use("/api", universityRoutes);
 app.use("/api", commentRoutes);
 app.use("/api", userRoutes);
+app.use("/api", departmentCodeRoutes);
 
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
