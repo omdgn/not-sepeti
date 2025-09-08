@@ -307,6 +307,50 @@
  *           type: string
  *           format: date-time
  *           description: Güncellenme zamanı (otomatik)
+ * 
+ *     DepartmentCode:
+ *       type: object
+ *       required:
+ *         - code
+ *         - universityId
+ *         - addedBy
+ *       description: >
+ *         Üniversitelere ait ders branş kodları bu modelde saklanır.
+ *         Her bir kod bir üniversiteye bağlıdır.
+ *         Kim tarafından eklendiği `addedBy` alanında tutulur.
+ *         Kullanıcılar ya da adminler kod ekleyebilir.
+ *         Aynı üniversitede aynı kod tekrar edemez (unique).
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: objectId
+ *           description: Kodun benzersiz ID’si
+ *           example: "650e3f9d12ae23b7c7de99b2"
+ *         code:
+ *           type: string
+ *           description: >
+ *             Ders branş kodu örneğin: BLG, ENG, BIO. Kod büyük harfli olmalı ve 10 karakteri geçmemeli.
+ *           example: "BLG"
+ *         universityId:
+ *           type: string
+ *           format: objectId
+ *           description: Kodun ait olduğu üniversite ID'si
+ *           example: "64fbbf9e12ab34cd56ef7891"
+ *         addedBy:
+ *           type: string
+ *           format: objectId
+ *           description: Kodu ekleyen kullanıcının ID'si
+ *           example: "64fbbf9e12ab34cd56ef7888"
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Oluşturulma zamanı
+ *           example: "2025-09-08T09:58:00.000Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Son güncellenme zamanı
+ *           example: "2025-09-08T10:10:00.000Z"
  */
 
 
@@ -2106,6 +2150,222 @@
  *       500:
  *         description: "Sunucu hatası"
  */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================= DEPARTMENT CODE ROUTES =======================
+// Bu bölüm üniversite bazlı ders kodu işlemleri için endpointleri kapsar.
+
+/**
+ * @openapi
+ * tags:
+ *   - name: DepartmentCode
+ *     description: "Üniversiteye özel ders kodu işlemleri (giriş yapan kullanıcılar ve adminler için)"
+ */
+
+/**
+ * @openapi
+ * /{slug}/department-codes:
+ *   get:
+ *     tags: [DepartmentCode]
+ *     summary: "Slug ile ders kodlarını getir (public)"
+ *     description: |
+ *       Belirtilen üniversite `slug` değerine göre o üniversiteye ait tüm ders kodlarını döndürür.
+ *       - Token gerekmez.
+ *       - Frontend'de not yükleme ekranında dropdown listesi için kullanılabilir.
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Üniversite slug değeri (örn: 'yasar')"
+ *     responses:
+ *       200:
+ *         description: "Kodlar başarıyla getirildi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 codes:
+ *                   type: array
+ *                   items:
+ *                     $ref: "#/components/schemas/DepartmentCode"
+ *       404:
+ *         description: "Üniversite bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /department-codes/my-university:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [DepartmentCode]
+ *     summary: "Giriş yapan kullanıcının üniversitesine ait kodları getir"
+ *     responses:
+ *       200:
+ *         description: "Kodlar getirildi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 codes:
+ *                   type: array
+ *                   items:
+ *                     $ref: "#/components/schemas/DepartmentCode"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /department-codes:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [DepartmentCode]
+ *     summary: "Yeni ders kodu ekle (kullanıcı ve admin erişimi)"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: "Eklenecek ders kodu"
+ *                 example: "COMP"
+ *     responses:
+ *       201:
+ *         description: "Kod başarıyla eklendi"
+ *       400:
+ *         description: "Kod eksik veya zaten mevcut"
+ *       500:
+ *         description: "Kod eklenemedi"
+ */
+
+/**
+ * @openapi
+ * /admin/department-codes:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [DepartmentCode]
+ *     summary: "Tüm kodları listele (admin erişimi)"
+ *     responses:
+ *       200:
+ *         description: "Kodlar listelendi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 codes:
+ *                   type: array
+ *                   items:
+ *                     $ref: "#/components/schemas/DepartmentCode"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /admin/department-codes/{id}:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [DepartmentCode]
+ *     summary: "Kod güncelle (admin erişimi)"
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Güncellenecek kodun ID'si"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 example: "ENGR"
+ *     responses:
+ *       200:
+ *         description: "Kod güncellendi"
+ *       404:
+ *         description: "Kod bulunamadı"
+ *       500:
+ *         description: "Güncelleme hatası"
+ */
+
+/**
+ * @openapi
+ * /admin/department-codes/{id}:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [DepartmentCode]
+ *     summary: "Kod sil (admin erişimi)"
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Silinecek kodun ID'si"
+ *     responses:
+ *       200:
+ *         description: "Kod silindi"
+ *       404:
+ *         description: "Kod bulunamadı"
+ *       500:
+ *         description: "Silme hatası"
+ */
+
+
+
+
+
+
+
+
+
+
+
 
 
 
