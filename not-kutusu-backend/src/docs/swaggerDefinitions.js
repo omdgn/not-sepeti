@@ -1639,6 +1639,47 @@
  *                   type: number
  *                   description: "Toplam not sayısı"
  *                   example: 8500
+ *                 commentCount:
+ *                   type: number
+ *                   description: "Toplam yorum sayısı"
+ *                   example: 2150
+ *                 totalLikes:
+ *                   type: number
+ *                   description: "Toplam beğeni sayısı"
+ *                   example: 12500
+ *                 topUniversities:
+ *                   type: array
+ *                   description: "En çok notu olan 10 üniversite"
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                         example: "Boğaziçi Üniversitesi"
+ *                       slug:
+ *                         type: string
+ *                         example: "bogazici"
+ *                       noteCount:
+ *                         type: number
+ *                         example: 450
+ *                 topCourses:
+ *                   type: array
+ *                   description: "En çok notu olan 10 ders"
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       courseName:
+ *                         type: string
+ *                         example: "Calculus I"
+ *                       courseCode:
+ *                         type: string
+ *                         example: "MATH-101"
+ *                       universityName:
+ *                         type: string
+ *                         example: "Boğaziçi Üniversitesi"
+ *                       noteCount:
+ *                         type: number
+ *                         example: 85
  *       500:
  *         description: "Sunucu hatası"
  */
