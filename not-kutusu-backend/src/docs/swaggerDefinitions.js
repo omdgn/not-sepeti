@@ -1648,9 +1648,11 @@
  * /university/stats/{slug}:
  *   get:
  *     summary: "Üniversiteye özgü istatistikleri getir"
- *     description: "Belirtilen üniversiteye ait kullanıcı ve not sayılarını döner"
+ *     description: "Belirtilen üniversiteye ait kullanıcı ve not sayılarını döner (giriş gerekli)"
  *     tags:
  *       - Universities
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: slug
@@ -1696,6 +1698,10 @@
  *                 message:
  *                   type: string
  *                   example: "Üniversite bulunamadı"
+ *       401:
+ *         description: "Token eksik"
+ *       403:
+ *         description: "Token geçersiz veya süresi dolmuş"
  *       500:
  *         description: "Sunucu hatası"
  */
