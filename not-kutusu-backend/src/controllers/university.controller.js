@@ -111,9 +111,78 @@ const getUniversityStats = async (req, res) => {
       return res.status(404).json({ message: "Üniversite bulunamadı" });
     }
 
-    const [userCount, noteCount] = await Promise.all([
+    const [
+      userCount,
+      noteCount,
+      courseCount,
+      commentCount,
+      totalLikes,
+      topCourses,
+      topContributors
+    ] = await Promise.all([
       User.countDocuments({ universityId: university._id }),
-      Note.countDocuments({ universityId: university._id })
+      Note.countDocuments({ universityId: university._id }),
+      Course.countDocuments({ universityId: university._id }),
+      Comment.aggregate([
+        {
+          $lookup: {
+            from: "Note",
+            localField: "noteId",
+            foreignField: "_id",
+            as: "note"
+          }
+        },
+        { $unwind: "$note" },
+        { $match: { "note.universityId": university._id } },
+        { $count: "total" }
+      ]).then(result => result[0]?.total || 0),
+      Note.aggregate([
+        { $match: { universityId: university._id } },
+        { $group: { _id: null, total: { $sum: "$likes" } } }
+      ]).then(result => result[0]?.total || 0),
+      Note.aggregate([
+        { $match: { universityId: university._id } },
+        { $group: { _id: "$courseId", noteCount: { $sum: 1 } } },
+        { $sort: { noteCount: -1 } },
+        { $limit: 5 },
+        {
+          $lookup: {
+            from: "Course",
+            localField: "_id",
+            foreignField: "_id",
+            as: "course"
+          }
+        },
+        { $unwind: "$course" },
+        {
+          $project: {
+            courseName: "$course.name",
+            courseCode: "$course.code",
+            noteCount: 1
+          }
+        }
+      ]),
+      Note.aggregate([
+        { $match: { universityId: university._id } },
+        { $group: { _id: "$createdBy", noteCount: { $sum: 1 } } },
+        { $sort: { noteCount: -1 } },
+        { $limit: 5 },
+        {
+          $lookup: {
+            from: "User",
+            localField: "_id",
+            foreignField: "_id",
+            as: "user"
+          }
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            userName: "$user.name",
+            noteCount: 1
+          }
+        }
+      ])
     ]);
 
     res.status(200).json({
@@ -122,7 +191,12 @@ const getUniversityStats = async (req, res) => {
         slug: university.slug
       },
       userCount,
-      noteCount
+      noteCount,
+      courseCount,
+      commentCount,
+      totalLikes,
+      topCourses,
+      topContributors
     });
   } catch (err) {
     res.status(500).json({ message: "Sunucu hatası", error: err.message });
