@@ -1729,6 +1729,45 @@
  *                   type: number
  *                   description: "Bu üniversitedeki not sayısı"
  *                   example: 780
+ *                 courseCount:
+ *                   type: number
+ *                   description: "Bu üniversitedeki ders sayısı"
+ *                   example: 45
+ *                 commentCount:
+ *                   type: number
+ *                   description: "Bu üniversitedeki toplam yorum sayısı"
+ *                   example: 320
+ *                 totalLikes:
+ *                   type: number
+ *                   description: "Bu üniversitedeki toplam beğeni sayısı"
+ *                   example: 1850
+ *                 topCourses:
+ *                   type: array
+ *                   description: "En çok notu olan 5 ders"
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       courseName:
+ *                         type: string
+ *                         example: "Calculus I"
+ *                       courseCode:
+ *                         type: string
+ *                         example: "MATH-101"
+ *                       noteCount:
+ *                         type: number
+ *                         example: 25
+ *                 topContributors:
+ *                   type: array
+ *                   description: "En çok not yükleyen 5 kullanıcı"
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userName:
+ *                         type: string
+ *                         example: "Ali Yılmaz"
+ *                       noteCount:
+ *                         type: number
+ *                         example: 15
  *       404:
  *         description: "Üniversite bulunamadı"
  *         content:
