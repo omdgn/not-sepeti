@@ -12,6 +12,6 @@ router.get("/universities", getAllUniversities);
 router.get("/stats", getGlobalStats);
 
 // 📊 Üniversiteye özgü istatistikler (slug bazlı, giriş gerekli)
-router.get("/stats/:slug", authMiddleware, getUniversityStats);
+router.get(":slug/stats", authMiddleware, getUniversityStats);
 
 module.exports = router;
