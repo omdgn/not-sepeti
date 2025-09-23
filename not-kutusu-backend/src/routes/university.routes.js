@@ -9,9 +9,9 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.get("/universities", getAllUniversities);
 
 // 📊 Global istatistikler (herkes erişebilir)
-router.get("/stats", getGlobalStats);
+router.get("/universities/stats", getGlobalStats);
 
 // 📊 Üniversiteye özgü istatistikler (slug bazlı, giriş gerekli)
-router.get(":slug/stats", authMiddleware, getUniversityStats);
+router.get("/universities/:slug/stats", authMiddleware, getUniversityStats);
 
 module.exports = router;
