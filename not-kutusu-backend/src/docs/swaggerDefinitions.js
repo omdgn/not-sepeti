@@ -1613,7 +1613,7 @@
 
 /**
  * @openapi
- * /university/stats:
+ * /university/universities/stats:
  *   get:
  *     summary: "Global istatistikleri getir"
  *     description: "Tüm üniversite, kullanıcı ve not sayılarını döner (giriş gerektirmez)"
@@ -1686,7 +1686,7 @@
 
 /**
  * @openapi
- * /university/{slug}/stats:
+ * /university/universities/{slug}/stats:
  *   get:
  *     summary: "Üniversiteye özgü istatistikleri getir"
  *     description: "Belirtilen üniversiteye ait kullanıcı ve not sayılarını döner (giriş gerekli)"
