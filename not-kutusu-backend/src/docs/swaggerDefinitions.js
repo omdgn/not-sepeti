@@ -1611,6 +1611,95 @@
  *         description: "Sunucu hatası"
  */
 
+/**
+ * @openapi
+ * /university/stats:
+ *   get:
+ *     summary: "Global istatistikleri getir"
+ *     description: "Tüm üniversite, kullanıcı ve not sayılarını döner (giriş gerektirmez)"
+ *     tags:
+ *       - Universities
+ *     responses:
+ *       200:
+ *         description: "İstatistikler başarıyla getirildi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 universityCount:
+ *                   type: number
+ *                   description: "Toplam üniversite sayısı"
+ *                   example: 25
+ *                 userCount:
+ *                   type: number
+ *                   description: "Toplam kullanıcı sayısı"
+ *                   example: 1250
+ *                 noteCount:
+ *                   type: number
+ *                   description: "Toplam not sayısı"
+ *                   example: 8500
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /university/stats/{slug}:
+ *   get:
+ *     summary: "Üniversiteye özgü istatistikleri getir"
+ *     description: "Belirtilen üniversiteye ait kullanıcı ve not sayılarını döner"
+ *     tags:
+ *       - Universities
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Üniversite slug değeri"
+ *         example: "bogazici"
+ *     responses:
+ *       200:
+ *         description: "Üniversite istatistikleri başarıyla getirildi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 university:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       description: "Üniversite adı"
+ *                       example: "Boğaziçi Üniversitesi"
+ *                     slug:
+ *                       type: string
+ *                       description: "Üniversite slug değeri"
+ *                       example: "bogazici"
+ *                 userCount:
+ *                   type: number
+ *                   description: "Bu üniversitedeki kullanıcı sayısı"
+ *                   example: 150
+ *                 noteCount:
+ *                   type: number
+ *                   description: "Bu üniversitedeki not sayısı"
+ *                   example: 780
+ *       404:
+ *         description: "Üniversite bulunamadı"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Üniversite bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
 
 
 
