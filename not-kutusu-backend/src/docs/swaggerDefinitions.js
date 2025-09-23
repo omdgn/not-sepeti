@@ -1686,7 +1686,7 @@
 
 /**
  * @openapi
- * /university/stats/{slug}:
+ * /university/{slug}/stats:
  *   get:
  *     summary: "Üniversiteye özgü istatistikleri getir"
  *     description: "Belirtilen üniversiteye ait kullanıcı ve not sayılarını döner (giriş gerekli)"
