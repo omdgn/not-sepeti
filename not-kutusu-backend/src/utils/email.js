@@ -13,9 +13,15 @@ const transporter = nodemailer.createTransport({
 });
 
 // ✅ Bağlantı testi (başlangıçta 1 kez loglar)
+console.log("🔍 Debug - NODE_ENV:", process.env.NODE_ENV);
+console.log("🔍 Debug - EMAIL_USER:", process.env.EMAIL_USER ? "✅ Var" : "❌ Yok");
+console.log("🔍 Debug - EMAIL_PASS:", process.env.EMAIL_PASS ? `✅ Var (${process.env.EMAIL_PASS.length} karakter)` : "❌ Yok");
+console.log("🔍 Debug - FRONTEND_URL:", process.env.FRONTEND_URL || "❌ Yok");
+
 transporter.verify(function (error, success) {
   if (error) {
-    console.error("❌ Email transporter bağlantı hatası:", error);
+    console.error("❌ Email transporter bağlantı hatası:", error.code || error.message);
+    console.log("⚠️  Email servisi çalışmıyor ama sistem devam edecek.");
   } else {
     console.log("✅ Email servisine başarıyla bağlandı.");
   }
@@ -24,7 +30,8 @@ transporter.verify(function (error, success) {
 // ✅ Doğrulama maili gönderimi
 const sendVerificationEmail = async (to, token) => {
   const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-//  console.log("🔗 Doğrulama linki:", url);
+  console.log("🔗 Doğrulama linki:", url);
+
   try {
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -40,14 +47,17 @@ const sendVerificationEmail = async (to, token) => {
     });
     console.log("✅ Doğrulama maili gönderildi →", to);
   } catch (err) {
-    console.error("❌ Doğrulama maili gönderme hatası:", err);
+    console.error("❌ Doğrulama maili gönderme hatası:", err.code || err.message);
+    console.log("⚠️  Email gönderilemedi ama kullanıcı kaydı başarılı. Link:", url);
+    // Email gönderemese bile sistem crash etmesin
   }
 };
 
 // ✅ Şifre sıfırlama maili gönderimi
 const sendResetPasswordEmail = async (to, token) => {
   const url = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-//  console.log("🔗 Şifre sıfırlama linki:", url);
+  console.log("🔗 Şifre sıfırlama linki:", url);
+
   try {
     await transporter.sendMail({
       from: `"Not Kutusu" <${process.env.EMAIL_USER}>`,
@@ -62,7 +72,9 @@ const sendResetPasswordEmail = async (to, token) => {
     });
     console.log("✅ Şifre sıfırlama maili gönderildi →", to);
   } catch (err) {
-    console.error("❌ Şifre sıfırlama maili gönderme hatası:", err);
+    console.error("❌ Şifre sıfırlama maili gönderme hatası:", err.code || err.message);
+    console.log("⚠️  Email gönderilemedi ama işlem başarılı. Link:", url);
+    // Email gönderemese bile sistem crash etmesin
   }
 };
 
