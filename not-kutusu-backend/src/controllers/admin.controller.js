@@ -2,6 +2,7 @@ const Note = require("../models/note.model");
 const Comment = require("../models/comment.model");
 const User = require("../models/user.model");
 const University = require("../models/university.model");
+const UserSuggestion = require("../models/userSuggestion.model");
 
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwt"); 
@@ -232,6 +233,138 @@ const unbanUser = async (req, res) => {
   }
 };
 
+// 🟡 Admin - Tüm önerileri getirme
+const getAllSuggestions = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const status = req.query.status;
+    const search = req.query.search;
+
+    let query = {};
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const suggestions = await UserSuggestion.find(query)
+      .populate('userId', 'name email')
+      .populate('adminId', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await UserSuggestion.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: suggestions,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+
+  } catch (error) {
+    console.error("Admin öneri listesi hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Sunucu hatası"
+    });
+  }
+};
+
+// 🟡 Admin - Öneri durumu güncelleme
+const updateSuggestionStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, adminNotes } = req.body;
+    const adminId = req.user._id || req.user.userId;
+
+    const validStatuses = ["Beklemede", "Görüldü", "İnceleniyor", "Eklendi", "Eklenmedi"];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Geçersiz durum değeri."
+      });
+    }
+
+    const suggestion = await UserSuggestion.findById(id);
+
+    if (!suggestion) {
+      return res.status(404).json({
+        success: false,
+        message: "Öneri bulunamadı."
+      });
+    }
+
+    suggestion.status = status;
+    suggestion.adminId = adminId;
+
+    if (adminNotes) {
+      suggestion.adminNotes = adminNotes;
+    }
+
+    await suggestion.save();
+    await suggestion.populate('userId', 'name email');
+    await suggestion.populate('adminId', 'name email');
+
+    res.json({
+      success: true,
+      message: "Öneri durumu başarıyla güncellendi.",
+      data: suggestion
+    });
+
+  } catch (error) {
+    console.error("Admin öneri güncelleme hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Sunucu hatası"
+    });
+  }
+};
+
+// 🟡 Admin - Öneri silme
+const deleteSuggestionByAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const suggestion = await UserSuggestion.findById(id);
+
+    if (!suggestion) {
+      return res.status(404).json({
+        success: false,
+        message: "Öneri bulunamadı."
+      });
+    }
+
+    await UserSuggestion.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: "Öneri başarıyla silindi."
+    });
+
+  } catch (error) {
+    console.error("Admin öneri silme hatası:", error);
+    res.status(500).json({
+      success: false,
+      message: "Sunucu hatası"
+    });
+  }
+};
+
 module.exports = {
   getReportedNotes,
   getReportedComments,
@@ -239,8 +372,11 @@ module.exports = {
   deleteCommentByAdmin,
   banUser,
   unbanUser,
-    createUniversity,
-    updateUniversity,
-    deleteUniversity,
-    adminLogin
+  createUniversity,
+  updateUniversity,
+  deleteUniversity,
+  adminLogin,
+  getAllSuggestions,
+  updateSuggestionStatus,
+  deleteSuggestionByAdmin
 };

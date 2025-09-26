@@ -11,10 +11,10 @@ app.use(express.json());
 app.use(helmet());
 app.use(morgan("dev"));
 
-// Geçici olarak CORS kaldırıldı (geliştirme için)
+// 🎯 Geçici olarak CORS kaldırıldı (geliştirme için)
 app.use(cors());
 
-// CORS ayarı 
+// 🎯 Sıkı CORS ayarı (geliştirme sonrası aktif edilecek)
 // const allowedOrigins = [process.env.FRONTEND_URL];
 // app.use(cors({
 //   origin: function (origin, callback) {
@@ -44,6 +44,7 @@ const { swaggerUi, swaggerSpec } = require("./swagger");
 const commentRoutes = require("./routes/comment.routes");
 const userRoutes = require("./routes/user.routes");
 const departmentCodeRoutes = require("./routes/departmentCode.routes");
+const suggestionRoutes = require("./routes/suggestion.routes");
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -54,6 +55,7 @@ app.use("/api", universityRoutes);
 app.use("/api", commentRoutes);
 app.use("/api", userRoutes);
 app.use("/api", departmentCodeRoutes);
+app.use("/api", suggestionRoutes);
 
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

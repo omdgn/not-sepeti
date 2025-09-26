@@ -11,7 +11,10 @@ const {
   createUniversity,
   updateUniversity,
   deleteUniversity,
-  adminLogin
+  adminLogin,
+  getAllSuggestions,
+  updateSuggestionStatus,
+  deleteSuggestionByAdmin
 } = require("../controllers/admin.controller");
 
 // 📌 Bu route dışındaki her şey token ister!
@@ -36,5 +39,10 @@ router.delete("/comments/:id", deleteCommentByAdmin);
 // Kullanıcı yönetimi
 router.patch("/users/:id/ban", banUser);
 router.patch("/users/:id/unban", unbanUser);
+
+// Öneri yönetimi
+router.get("/suggestions", getAllSuggestions);
+router.put("/suggestions/:id/status", updateSuggestionStatus);
+router.delete("/suggestions/:id", deleteSuggestionByAdmin);
 
 module.exports = router;

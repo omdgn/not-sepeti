@@ -351,6 +351,59 @@
  *           format: date-time
  *           description: Son güncellenme zamanı
  *           example: "2025-09-08T10:10:00.000Z"
+ *
+ *     UserSuggestion:
+ *       type: object
+ *       required:
+ *         - title
+ *         - content
+ *         - userId
+ *       description: >
+ *         Kullanıcıların site geliştirme için önerileri bu modelde saklanır.
+ *         Admin tarafından görülebilir ve durum güncellenebilir.
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: objectId
+ *           description: Önerinin benzersiz ID'si
+ *           example: "650e3f9d12ae23b7c7de99b3"
+ *         title:
+ *           type: string
+ *           description: Öneri başlığı (maksimum 200 karakter)
+ *           example: "Mobil uygulama geliştirin"
+ *         content:
+ *           type: string
+ *           description: Öneri içeriği (maksimum 1000 karakter)
+ *           example: "iOS ve Android için native uygulama olsa çok güzel olur. Push notification ile yeni notlar hakkında bilgilendirme yapılabilir."
+ *         userId:
+ *           type: string
+ *           format: objectId
+ *           description: Öneriyi gönderen kullanıcının ID'si
+ *           example: "64fbbf9e12ab34cd56ef7888"
+ *         status:
+ *           type: string
+ *           enum: [Beklemede, Görüldü, İnceleniyor, Eklendi, Eklenmedi]
+ *           description: Önerinin durumu
+ *           example: "Beklemede"
+ *         adminNotes:
+ *           type: string
+ *           description: Admin tarafından eklenen notlar (opsiyonel, maksimum 500 karakter)
+ *           example: "Harika öneri! Teknik ekiple değerlendiriliyor."
+ *         adminId:
+ *           type: string
+ *           format: objectId
+ *           description: Son işlemi yapan admin ID'si (opsiyonel)
+ *           example: "64fbbf9e12ab34cd56ef7999"
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Oluşturulma zamanı
+ *           example: "2025-09-08T09:58:00.000Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Son güncellenme zamanı
+ *           example: "2025-09-08T10:10:00.000Z"
  */
 
 
@@ -655,7 +708,7 @@
  * @openapi
  * tags:
  *   - name: Admin
- *     description: Admin işlemleri (üniversite yönetimi, raporlanan içerikler, kullanıcı yönetimi)
+ *     description: Admin işlemleri (üniversite yönetimi, raporlanan içerikler, kullanıcı yönetimi, öneri yönetimi)
  */
 
 /**
@@ -1024,6 +1077,170 @@
  *         description: "Kullanıcı banı kaldırıldı"
  *       404:
  *         description: "Kullanıcı bulunamadı"
+ */
+
+/**
+ * @openapi
+ * /admin/suggestions:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Tüm önerileri listele
+ *     description: |
+ *       Admin tüm kullanıcı önerilerini listeleyebilir.
+ *       Sayfalama, durum filtresi ve arama desteği mevcuttur.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Sayfa başına gösterilecek öneri sayısı
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [Beklemede, Görüldü, İnceleniyor, Eklendi, Eklenmedi]
+ *         description: Durum filtresi
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Başlık ve içerikte arama
+ *     responses:
+ *       200:
+ *         description: "Öneri listesi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/UserSuggestion'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     total:
+ *                       type: integer
+ *                       example: 25
+ *                     pages:
+ *                       type: integer
+ *                       example: 3
+ *       403:
+ *         description: "Yalnızca admin erişebilir"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /admin/suggestions/{id}/status:
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Öneri durumunu güncelle
+ *     description: Admin öneri durumunu değiştirebilir ve not ekleyebilir
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Öneri ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [Beklemede, Görüldü, İnceleniyor, Eklendi, Eklenmedi]
+ *                 example: "İnceleniyor"
+ *               adminNotes:
+ *                 type: string
+ *                 maxLength: 500
+ *                 example: "Harika öneri! Teknik ekiple değerlendiriliyor."
+ *     responses:
+ *       200:
+ *         description: "Öneri durumu güncellendi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Öneri durumu başarıyla güncellendi."
+ *                 data:
+ *                   $ref: '#/components/schemas/UserSuggestion'
+ *       400:
+ *         description: "Geçersiz durum değeri"
+ *       404:
+ *         description: "Öneri bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /admin/suggestions/{id}:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Öneriyi sil
+ *     description: Admin herhangi bir öneriyi tamamen silebilir
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Öneri ID
+ *     responses:
+ *       200:
+ *         description: "Öneri silindi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Öneri başarıyla silindi."
+ *       404:
+ *         description: "Öneri bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
  */
 
 
@@ -2554,6 +2771,247 @@
 
 
 
+
+
+
+
+// ======================= SUGGESTIONS ROUTES =======================
+// Bu bölüm kullanıcı önerileri işlemlerini kapsar.
+/**
+ * @openapi
+ * tags:
+ *   - name: Suggestions
+ *     description: Kullanıcı önerileri (oluşturma, listeleme, güncelleme, silme)
+ */
+
+/**
+ * @openapi
+ * /suggestions:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Suggestions]
+ *     summary: Yeni öneri oluştur
+ *     description: Giriş yapmış kullanıcı yeni öneri gönderebilir
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 maxLength: 200
+ *                 example: "Mobil uygulama geliştirin"
+ *               content:
+ *                 type: string
+ *                 maxLength: 1000
+ *                 example: "iOS ve Android için native uygulama olsa çok güzel olur."
+ *     responses:
+ *       201:
+ *         description: "Öneri başarıyla gönderildi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Öneriniz başarıyla gönderildi."
+ *                 data:
+ *                   $ref: '#/components/schemas/UserSuggestion'
+ *       400:
+ *         description: "Başlık ve içerik zorunludur"
+ *       401:
+ *         description: "Token eksik"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /suggestions/my:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Suggestions]
+ *     summary: Kendi önerilerini getir
+ *     description: Giriş yapmış kullanıcının kendi önerilerini sayfalama ile getirir
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Sayfa başına gösterilecek öneri sayısı
+ *     responses:
+ *       200:
+ *         description: "Öneri listesi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/UserSuggestion'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                       example: 1
+ *                     limit:
+ *                       type: integer
+ *                       example: 10
+ *                     total:
+ *                       type: integer
+ *                       example: 5
+ *                     pages:
+ *                       type: integer
+ *                       example: 1
+ *       401:
+ *         description: "Token eksik"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /suggestions/{id}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Suggestions]
+ *     summary: Öneri detayını getir
+ *     description: Kullanıcı sadece kendi önerisinin detayını görebilir
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Öneri ID
+ *     responses:
+ *       200:
+ *         description: "Öneri detayı"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/UserSuggestion'
+ *       404:
+ *         description: "Öneri bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
+ *
+ *   put:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Suggestions]
+ *     summary: Öneriyi güncelle
+ *     description: Kullanıcı sadece "Beklemede" ve "Görüldü" durumundaki kendi önerilerini güncelleyebilir
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Öneri ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 maxLength: 200
+ *                 example: "Mobil uygulama ve web PWA"
+ *               content:
+ *                 type: string
+ *                 maxLength: 1000
+ *                 example: "Hem mobil uygulama hem de Progressive Web App olarak geliştirilebilir."
+ *     responses:
+ *       200:
+ *         description: "Öneri güncellendi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Öneri başarıyla güncellendi."
+ *                 data:
+ *                   $ref: '#/components/schemas/UserSuggestion'
+ *       400:
+ *         description: "Bu durumdaki öneri güncellenemez"
+ *       404:
+ *         description: "Öneri bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
+ *
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Suggestions]
+ *     summary: Öneriyi sil
+ *     description: Kullanıcı sadece "Beklemede" ve "Görüldü" durumundaki kendi önerilerini silebilir
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Öneri ID
+ *     responses:
+ *       200:
+ *         description: "Öneri silindi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Öneri başarıyla silindi."
+ *       400:
+ *         description: "Bu durumdaki öneri silinemez"
+ *       404:
+ *         description: "Öneri bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
 
 
 
