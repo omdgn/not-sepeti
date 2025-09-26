@@ -6,6 +6,9 @@ const { generalLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 
+// Trust proxy (Render.com için gerekli)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(express.json());
 app.use(helmet());
