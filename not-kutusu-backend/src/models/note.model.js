@@ -11,6 +11,7 @@ const NoteSchema = new mongoose.Schema({
   likes: { type: Number, default: 0 },
   dislikes: { type: Number, default: 0 },
   reports: { type: Number, default: 0 },
+  viewCount: { type: Number, default: 0 },
   description: { type: String },
   reactions: [
     {

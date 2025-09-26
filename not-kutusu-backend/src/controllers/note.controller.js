@@ -116,6 +116,10 @@ const getNoteById = async (req, res) => {
       return res.status(403).json({ message: "Erişim yetkiniz yok" });
     }
 
+    // Görüntülenme sayısını artır
+    await Note.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
+    note.viewCount += 1;
+
     res.json(note);
   } catch (err) {
     console.error("Not detay hatası:", err);

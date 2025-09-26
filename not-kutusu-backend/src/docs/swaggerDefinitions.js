@@ -207,6 +207,10 @@
  *           type: number
  *           description: Rapor sayısı (varsayılan 0)
  *           example: 1
+ *         viewCount:
+ *           type: number
+ *           description: Görüntülenme sayısı (varsayılan 0)
+ *           example: 125
  *         reactions:
  *           type: array
  *           description: Notla ilgili kullanıcı reaksiyonları (beğeni, beğenmeme, rapor) ve açıklamaları
