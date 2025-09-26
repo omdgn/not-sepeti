@@ -11,18 +11,21 @@ app.use(express.json());
 app.use(helmet());
 app.use(morgan("dev"));
 
-// 🎯 Sıkı CORS ayarı
-const allowedOrigins = [process.env.FRONTEND_URL];
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS policy: Bu domain'e izin verilmiyor."));
-    }
-  },
-  credentials: true
-}));
+// Geçici olarak CORS kaldırıldı (geliştirme için)
+app.use(cors());
+
+// CORS ayarı 
+// const allowedOrigins = [process.env.FRONTEND_URL];
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("CORS policy: Bu domain'e izin verilmiyor."));
+//     }
+//   },
+//   credentials: true
+// }));
 
 // 📌 Admin route'u en başta tanımla (login token istemesin)
 const adminRoutes = require("./routes/admin.routes");
