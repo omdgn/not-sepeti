@@ -2,7 +2,9 @@ const nodemailer = require("nodemailer");
 
 // ✅ Transporter tanımı
 const transporter = nodemailer.createTransport({
-  service: "gmail", // Gmail SMTP
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // STARTTLS kullan
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -10,6 +12,9 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 60000, // 60 saniye
   greetingTimeout: 30000,   // 30 saniye
   socketTimeout: 60000,     // 60 saniye
+  tls: {
+    rejectUnauthorized: false // Render için gerekli
+  }
 });
 
 // ✅ Bağlantı testi (başlangıçta 1 kez loglar)
