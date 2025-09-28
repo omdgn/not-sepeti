@@ -1,65 +1,91 @@
 const nodemailer = require("nodemailer");
+const sgMail = require('@sendgrid/mail');
 
-// ✅ Transporter tanımı - Render için optimize edilmiş
-const createTransporter = () => {
-  // Render ortamında farklı konfigürasyon
-  if (process.env.NODE_ENV === 'production') {
-    return nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465, // SSL port
-      secure: true, // SSL kullan
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      connectionTimeout: 30000,
-      greetingTimeout: 15000,
-      socketTimeout: 30000,
-      pool: true, // Bağlantı havuzu
-      maxConnections: 1,
-      maxMessages: 3,
-      rateLimit: 14, // saniyede 14 email
-      tls: {
-        rejectUnauthorized: false,
-        ciphers: 'SSLv3'
-      }
-    });
+// ✅ Email servis konfigürasyonu
+const initEmailService = () => {
+  if (process.env.NODE_ENV === 'production' && process.env.SENDGRID_API_KEY) {
+    // Production'da SendGrid kullan
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    console.log("🔧 SendGrid API aktif edildi");
+    return 'sendgrid';
   } else {
-    // Local geliştirme için mevcut konfigürasyon
-    return nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      connectionTimeout: 60000,
-      greetingTimeout: 30000,
-      socketTimeout: 60000,
-      tls: {
-        rejectUnauthorized: false
-      }
-    });
+    // Development'ta Gmail SMTP kullan
+    console.log("🔧 Gmail SMTP aktif edildi");
+    return 'gmail';
   }
 };
 
-const transporter = createTransporter();
+const emailService = initEmailService();
 
-// ✅ Bağlantı testi (başlangıçta 1 kez loglar)
-console.log("🔍 Debug - NODE_ENV:", process.env.NODE_ENV);
-console.log("🔍 Debug - EMAIL_USER:", process.env.EMAIL_USER ? "✅ Var" : "❌ Yok");
-console.log("🔍 Debug - EMAIL_PASS:", process.env.EMAIL_PASS ? `✅ Var (${process.env.EMAIL_PASS.length} karakter)` : "❌ Yok");
-console.log("🔍 Debug - FRONTEND_URL:", process.env.FRONTEND_URL || "❌ Yok");
-
-transporter.verify(function (error) {
-  if (error) {
-    console.error("❌ Email transporter bağlantı hatası:", error.code || error.message);
-    console.log("⚠️  Email servisi çalışmıyor ama sistem devam edecek.");
-  } else {
-    console.log("✅ Email servisine başarıyla bağlandı.");
+// Gmail için transporter
+const gmailTransporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  connectionTimeout: 60000,
+  greetingTimeout: 30000,
+  socketTimeout: 60000,
+  tls: {
+    rejectUnauthorized: false
   }
 });
+
+// ✅ Debug bilgileri
+console.log("🔍 Debug - NODE_ENV:", process.env.NODE_ENV);
+console.log("🔍 Debug - EMAIL_SERVICE:", emailService);
+console.log("🔍 Debug - EMAIL_USER:", process.env.EMAIL_USER ? "✅ Var" : "❌ Yok");
+console.log("🔍 Debug - SENDGRID_API_KEY:", process.env.SENDGRID_API_KEY ? "✅ Var" : "❌ Yok");
+console.log("🔍 Debug - FRONTEND_URL:", process.env.FRONTEND_URL || "❌ Yok");
+
+// Gmail bağlantı testi (sadece development'ta)
+if (emailService === 'gmail') {
+  gmailTransporter.verify(function (error) {
+    if (error) {
+      console.error("❌ Gmail SMTP bağlantı hatası:", error.code || error.message);
+      console.log("⚠️  Gmail servisi çalışmıyor ama sistem devam edecek.");
+    } else {
+      console.log("✅ Gmail SMTP servisine başarıyla bağlandı.");
+    }
+  });
+}
+
+// ✅ Email gönderme fonksiyonu (SendGrid veya Gmail)
+const sendEmail = async (mailOptions) => {
+  if (emailService === 'sendgrid') {
+    // SendGrid kullan
+    const msg = {
+      to: mailOptions.to,
+      from: process.env.EMAIL_USER, // Gmail adresinizi kullan
+      subject: mailOptions.subject,
+      html: mailOptions.html,
+    };
+
+    try {
+      await sgMail.send(msg);
+      console.log("✅ SendGrid ile email gönderildi →", mailOptions.to);
+    } catch (error) {
+      console.error("❌ SendGrid email hatası:", error.message);
+      throw error;
+    }
+  } else {
+    // Gmail SMTP kullan
+    try {
+      await gmailTransporter.sendMail({
+        from: process.env.EMAIL_USER,
+        replyTo: '"Not Kutusu" <notkutusuu@gmail.com>',
+        ...mailOptions
+      });
+      console.log("✅ Gmail SMTP ile email gönderildi →", mailOptions.to);
+    } catch (error) {
+      console.error("❌ Gmail SMTP email hatası:", error.message);
+      throw error;
+    }
+  }
+};
 
 // ✅ Doğrulama maili gönderimi
 const sendVerificationEmail = async (to, token) => {
@@ -67,9 +93,7 @@ const sendVerificationEmail = async (to, token) => {
   console.log("🔗 Doğrulama linki:", url);
 
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      replyTo: '"Not Kutusu" <notkutusuu@gmail.com>',
+    await sendEmail({
       to,
       subject: "E-posta Doğrulama",
       html: `
@@ -79,11 +103,9 @@ const sendVerificationEmail = async (to, token) => {
         <p>Bu link 10 dakika geçerlidir.</p>
       `,
     });
-    console.log("✅ Doğrulama maili gönderildi →", to);
   } catch (err) {
     console.error("❌ Doğrulama maili gönderme hatası:", err.code || err.message);
     console.log("⚠️  Email gönderilemedi ama kullanıcı kaydı başarılı. Link:", url);
-    // Email gönderemese bile sistem crash etmesin
   }
 };
 
@@ -93,8 +115,7 @@ const sendResetPasswordEmail = async (to, token) => {
   console.log("🔗 Şifre sıfırlama linki:", url);
 
   try {
-    await transporter.sendMail({
-      from: `"Not Kutusu" <${process.env.EMAIL_USER}>`,
+    await sendEmail({
       to,
       subject: "Şifre Sıfırlama Talebi",
       html: `
@@ -104,11 +125,9 @@ const sendResetPasswordEmail = async (to, token) => {
         <p>Bu bağlantı 1 saat geçerlidir.</p>
       `,
     });
-    console.log("✅ Şifre sıfırlama maili gönderildi →", to);
   } catch (err) {
     console.error("❌ Şifre sıfırlama maili gönderme hatası:", err.code || err.message);
     console.log("⚠️  Email gönderilemedi ama işlem başarılı. Link:", url);
-    // Email gönderemese bile sistem crash etmesin
   }
 };
 
