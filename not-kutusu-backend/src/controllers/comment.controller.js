@@ -32,6 +32,9 @@ const addComment = async (req, res) => {
       text: text.trim()
     });
 
+    // userId'yi populate et
+    await newComment.populate("userId", "name");
+
     res.status(201).json({ message: "Yorum eklendi", comment: newComment });
   } catch (err) {
     console.error("Yorum ekleme hatası:", err);
