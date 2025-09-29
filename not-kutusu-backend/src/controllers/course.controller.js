@@ -1,4 +1,5 @@
 const Course = require("../models/course.model");
+const Note = require("../models/note.model");
 
 // Yeni ders oluştur
 const createCourse = async (req, res) => {
@@ -39,42 +40,20 @@ const getCourses = async (req, res) => {
 const getCoursesByUniversity = async (req, res) => {
   try {
     const universityId = req.user.universityId;
+    const courses = await Course.find({ universityId }).sort({ createdAt: -1 });
 
-    // Aggregate pipeline ile dersleri ve not sayılarını getir
-    const courses = await Course.aggregate([
-      {
-        $match: { universityId: universityId }
-      },
-      {
-        $lookup: {
-          from: "Note", // Note collection'ı
-          localField: "_id",
-          foreignField: "courseId",
-          as: "notes"
-        }
-      },
-      {
-        $addFields: {
-          noteCount: { $size: "$notes" }
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          code: 1,
-          name: 1,
-          universityId: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          noteCount: 1
-        }
-      },
-      {
-        $sort: { createdAt: -1 }
-      }
-    ]);
+    // Her ders için not sayısını hesapla
+    const coursesWithNoteCount = await Promise.all(
+      courses.map(async (course) => {
+        const noteCount = await Note.countDocuments({ courseId: course._id });
+        return {
+          ...course.toObject(),
+          noteCount
+        };
+      })
+    );
 
-    res.json(courses);
+    res.json(coursesWithNoteCount);
   } catch (err) {
     console.error("Uni'ye göre ders çekme hatası:", err);
     res.status(500).json({ message: "Sunucu hatası" });
