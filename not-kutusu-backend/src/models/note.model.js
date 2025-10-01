@@ -13,6 +13,7 @@ const NoteSchema = new mongoose.Schema({
   reports: { type: Number, default: 0 },
   viewCount: { type: Number, default: 0 },
   description: { type: String },
+  isActive: { type: Boolean, default: true },
   reactions: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -28,6 +29,7 @@ NoteSchema.index({ courseId: 1 });
 NoteSchema.index({ createdBy: 1 });
 NoteSchema.index({ "reactions.userId": 1 });
 NoteSchema.index({ likes: -1, reports: -1, createdAt: -1 });
+NoteSchema.index({ isActive: 1, reports: -1 });
 NoteSchema.index({
   title: "text",
   description: "text",

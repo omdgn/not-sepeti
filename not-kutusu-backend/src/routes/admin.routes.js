@@ -3,6 +3,8 @@ const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const {
   getReportedNotes,
+  getInactiveNotes,
+  activateNote,
   getReportedComments,
   deleteNoteByAdmin,
   deleteCommentByAdmin,
@@ -31,6 +33,8 @@ router.delete("/universities/:id", deleteUniversity);
 
 // Raporlanan içerikler
 router.get("/notes/reported", getReportedNotes);
+router.get("/notes/inactive", getInactiveNotes);
+router.patch("/notes/:id/activate", activateNote);
 router.get("/comments/reported", getReportedComments);
 
 // İçerik silme

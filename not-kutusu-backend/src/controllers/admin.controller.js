@@ -142,11 +142,54 @@ const getReportedNotes = async (req, res) => {
     const notes = await Note.find({ reports: { $gt: 0 } })
       .populate("createdBy", "name email")
       .populate("courseId", "code name")
+      .populate("universityId", "name slug")
       .sort({ reports: -1, createdAt: -1 });
 
     res.json({ notes });
   } catch (err) {
     console.error("Raporlanan notları listeleme hatası:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+// 🚫 Pasifleştirilmiş Notları Listele (isActive: false)
+const getInactiveNotes = async (req, res) => {
+  try {
+    const notAdmin = checkAdmin(req, res);
+    if (notAdmin) return notAdmin;
+
+    const notes = await Note.find({ isActive: false })
+      .populate("createdBy", "name email")
+      .populate("courseId", "code name")
+      .populate("universityId", "name slug")
+      .sort({ reports: -1, createdAt: -1 });
+
+    res.json({ notes });
+  } catch (err) {
+    console.error("Pasif notları listeleme hatası:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+// ✅ Notu Yeniden Aktifleştir
+const activateNote = async (req, res) => {
+  try {
+    const notAdmin = checkAdmin(req, res);
+    if (notAdmin) return notAdmin;
+
+    const note = await Note.findByIdAndUpdate(
+      req.params.id,
+      { isActive: true, reports: 0 },
+      { new: true }
+    )
+      .populate("createdBy", "name email")
+      .populate("courseId", "code name");
+
+    if (!note) return res.status(404).json({ message: "Not bulunamadı" });
+
+    res.json({ message: "Not aktifleştirildi ve raporlar sıfırlandı", note });
+  } catch (err) {
+    console.error("Not aktifleştirme hatası:", err);
     res.status(500).json({ message: "Sunucu hatası" });
   }
 };
@@ -448,6 +491,8 @@ const adminSearchNotesWithSearchBar = async (req, res) => {
 
 module.exports = {
   getReportedNotes,
+  getInactiveNotes,
+  activateNote,
   getReportedComments,
   deleteNoteByAdmin,
   deleteCommentByAdmin,

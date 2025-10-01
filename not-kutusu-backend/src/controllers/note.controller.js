@@ -83,7 +83,10 @@ const uploadNote = async (req, res) => {
 const getNotes = async (req, res) => {
   try {
     const { course } = req.query;
-    const filter = { universityId: req.user.universityId };
+    const filter = {
+      universityId: req.user.universityId,
+      isActive: true
+    };
 
     if (course) {
       filter.courseId = course;
@@ -144,7 +147,8 @@ const getNotesByCourseSlug = async (req, res) => {
 
     const notes = await Note.find({
       courseId,
-      universityId: university._id
+      universityId: university._id,
+      isActive: true
     })
       .populate("courseId", "code name")
       .populate("createdBy", "name email")
@@ -273,8 +277,17 @@ const reportNote = async (req, res) => {
       note.reports++;
     }
 
+    // 🚫 10+ report varsa notu pasifleştir
+    if (note.reports >= 15) {
+      note.isActive = false;
+    }
+
     await note.save();
-    res.status(200).json({ message: "Raporlama işlemi tamamlandı", reports: note.reports });
+    res.status(200).json({
+      message: "Raporlama işlemi tamamlandı",
+      reports: note.reports,
+      isActive: note.isActive
+    });
   } catch (err) {
     console.error("Report hatası:", err);
     res.status(500).json({ message: "İşlem başarısız" });
@@ -293,7 +306,7 @@ const getTopContributors = async (req, res) => {
     }
 
     const topUsers = await Note.aggregate([
-      { $match: { universityId: university._id } },
+      { $match: { universityId: university._id, isActive: true } },
       {
         $group: {
           _id: "$createdBy",
@@ -353,7 +366,10 @@ const getTopNotes = async (req, res) => {
     }
 
     // 3. O üniversiteye ait en popüler notları getir
-    const topNotes = await Note.find({ universityId: university._id })
+    const topNotes = await Note.find({
+      universityId: university._id,
+      isActive: true
+    })
       .sort({ likes: -1 }) // en çok beğenilenler önce
       .limit(10)
       .populate("courseId", "code name")
@@ -414,6 +430,7 @@ const searchNotes = async (req, res) => {
 
     const notes = await Note.find({
       universityId: university._id,
+      isActive: true,
       $or: [
         { title: regex },
         { description: regex },
@@ -468,6 +485,7 @@ const searchNotesWithSearchBar = async (req, res) => {
     // Toplam sonuç sayısı
     const totalResults = await Note.countDocuments({
       universityId: university._id,
+      isActive: true,
       $or: [
         { title: regex },
         { description: regex },
@@ -478,6 +496,7 @@ const searchNotesWithSearchBar = async (req, res) => {
     // Notları getir
     const notes = await Note.find({
       universityId: university._id,
+      isActive: true,
       $or: [
         { title: regex },
         { description: regex },

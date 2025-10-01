@@ -211,6 +211,10 @@
  *           type: number
  *           description: Görüntülenme sayısı (varsayılan 0)
  *           example: 125
+ *         isActive:
+ *           type: boolean
+ *           description: Notun aktif olup olmadığı (15+ rapor edilince false olur)
+ *           example: true
  *         reactions:
  *           type: array
  *           description: Notla ilgili kullanıcı reaksiyonları (beğeni, beğenmeme, rapor) ve açıklamaları
@@ -904,6 +908,7 @@
  *       - bearerAuth: []
  *     tags: [Admin]
  *     summary: Raporlanan notları listele
+ *     description: reports > 0 olan tüm notları listeler (aktif ve pasif dahil)
  *     responses:
 *       200:
 *         description: "Raporlanan not listesi"
@@ -918,6 +923,73 @@
 *                     $ref: '#/components/schemas/Note'
  *       403:
  *         description: "Yalnızca admin erişebilir"
+ */
+
+/**
+ * @openapi
+ * /admin/notes/inactive:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Pasifleştirilmiş notları listele
+ *     description: isActive = false olan notları listeler (10+ rapor nedeniyle otomatik pasifleştirilmiş)
+ *     responses:
+ *       200:
+ *         description: "Pasif not listesi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Note'
+ *       403:
+ *         description: "Yalnızca admin erişebilir"
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /admin/notes/{id}/activate:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Pasif notu yeniden aktifleştir
+ *     description: |
+ *       Pasifleştirilmiş (isActive = false) bir notu yeniden aktif hale getirir.
+ *       - isActive = true yapılır
+ *       - reports = 0 sıfırlanır
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Not ID
+ *     responses:
+ *       200:
+ *         description: "Not aktifleştirildi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Not aktifleştirildi ve raporlar sıfırlandı"
+ *                 note:
+ *                   $ref: '#/components/schemas/Note'
+ *       403:
+ *         description: "Yalnızca admin erişebilir"
+ *       404:
+ *         description: "Not bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
  */
 
 /**
@@ -1795,6 +1867,8 @@
  *       - bearerAuth: []
  *     tags: [Notes]
  *     summary: Notu raporla
+ *     description: |
+ *       Notu raporlar. Eğer toplam rapor sayısı 15 veya daha fazla olursa not otomatik olarak pasifleştirilir (isActive = false).
  *     parameters:
  *       - in: path
  *         name: id
@@ -1813,6 +1887,24 @@
  *     responses:
  *       200:
  *         description: Rapor eklendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Raporlama işlemi tamamlandı"
+ *                 reports:
+ *                   type: number
+ *                   example: 10
+ *                 isActive:
+ *                   type: boolean
+ *                   example: false
+ *       404:
+ *         description: Not bulunamadı
+ *       500:
+ *         description: İşlem başarısız
  */
 
 /**
