@@ -3,6 +3,7 @@ const Note = require("../models/note.model");
 const University = require("../models/university.model");
 const Course = require("../models/course.model");
 const User = require("../models/user.model");
+const DepartmentCode = require("../models/departmentCode.model");
 const gamificationService = require("../services/gamificationService");
 
 // 🔒 URL doğrulama helper
@@ -48,7 +49,18 @@ const checkFileAccessible = async (url) => {
 // 🟢 Not Yükleme
 const uploadNote = async (req, res) => {
   try {
-    const { title, description, courseId, instructor, driveLink, year } = req.body;
+    const {
+      title,
+      description,
+      courseFormat,      // "split" | "single"
+      departmentCode,    // Split format için
+      courseNumber,      // Split format için
+      fullCourseCode,    // Single format için
+      instructor,
+      driveLink,
+      year,
+      semester
+    } = req.body;
 
     // 1. URL geçerli mi?
     if (!isValidURL(driveLink)) {
@@ -61,24 +73,132 @@ const uploadNote = async (req, res) => {
       return res.status(400).json({ message: "Dosya erişilemiyor veya çok küçük (boş)." });
     }
 
-    // 3. Not kaydet
+    // 3. Course kodunu oluştur ve normalize et
+    let finalCourseCode;
+
+    if (courseFormat === "split") {
+      // Validation
+      if (!departmentCode || !courseNumber) {
+        return res.status(400).json({
+          message: "Bölüm kodu ve ders numarası gerekli"
+        });
+      }
+
+      // COMP + 101E → COMP101E
+      finalCourseCode = `${departmentCode}${courseNumber}`
+        .toUpperCase()
+        .trim()
+        .replace(/[\s-]/g, ""); // Boşluk ve tire temizle
+
+    } else if (courseFormat === "single") {
+      // Validation
+      if (!fullCourseCode) {
+        return res.status(400).json({
+          message: "Ders kodu gerekli"
+        });
+      }
+
+      // 1505001 → 1505001
+      finalCourseCode = fullCourseCode
+        .toUpperCase()
+        .trim()
+        .replace(/[\s-]/g, "");
+
+    } else {
+      return res.status(400).json({
+        message: "Geçersiz ders kodu formatı (split veya single olmalı)"
+      });
+    }
+
+    // Validation: Minimum uzunluk
+    if (!finalCourseCode || finalCourseCode.length < 2) {
+      return res.status(400).json({ message: "Geçersiz ders kodu" });
+    }
+
+    // 4. DepartmentCode kaydet
+    if (courseFormat === "split" && departmentCode) {
+      // Split format: departmentCode'u kaydet (COMP)
+      await DepartmentCode.findOneAndUpdate(
+        {
+          code: departmentCode.toUpperCase().trim(),
+          universityId: req.user.universityId
+        },
+        {
+          code: departmentCode.toUpperCase().trim(),
+          universityId: req.user.universityId,
+          addedBy: req.user.userId
+        },
+        { upsert: true } // Yoksa oluştur, varsa dokunma
+      );
+    } else if (courseFormat === "single" && fullCourseCode) {
+      // Single format: fullCourseCode'u department code olarak da kaydet (1505001)
+      await DepartmentCode.findOneAndUpdate(
+        {
+          code: fullCourseCode.toUpperCase().trim().replace(/[\s-]/g, ""),
+          universityId: req.user.universityId
+        },
+        {
+          code: fullCourseCode.toUpperCase().trim().replace(/[\s-]/g, ""),
+          universityId: req.user.universityId,
+          addedBy: req.user.userId
+        },
+        { upsert: true } // Yoksa oluştur, varsa dokunma
+      );
+    }
+
+    // 5. Course bul veya oluştur (ATOMIC)
+    const course = await Course.findOneAndUpdate(
+      {
+        code: finalCourseCode,
+        universityId: req.user.universityId
+      },
+      {
+        code: finalCourseCode,
+        universityId: req.user.universityId,
+        $inc: { noteCount: 1 } // Aynı sorguda artır
+      },
+      {
+        upsert: true, // Yoksa oluştur
+        new: true     // Güncel dökümanı döndür
+      }
+    );
+
+    // 6. Yıl formatını oluştur
+    const formattedYear = year && semester ? `${year} - ${semester}` : year;
+
+    // 7. Not kaydet
     const newNote = await Note.create({
       title,
       description,
-      courseId,
+      courseId: course._id, // Course ID kullanılıyor
       instructor,
       driveLink,
-      year,
+      year: formattedYear,
       createdBy: req.user.userId,
       universityId: req.user.universityId
     });
 
-    // 🎮 Gamification: Not yükleme puanı
+    // 8. 🎮 Gamification: Not yükleme puanı
     await gamificationService.onNoteUpload(req.user.userId);
 
-    res.status(201).json({ message: "Not başarıyla yüklendi", note: newNote });
+    res.status(201).json({
+      message: "Not başarıyla yüklendi",
+      note: newNote,
+      course: {
+        code: course.code,
+        id: course._id
+      }
+    });
   } catch (error) {
     console.error("Not yükleme hatası:", error);
+
+    // Duplicate key error (teoride imkansız ama yine de)
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Bu ders zaten mevcut, lütfen tekrar deneyin"
+      });
+    }
+
     res.status(500).json({ message: "Not yüklenemedi" });
   }
 };

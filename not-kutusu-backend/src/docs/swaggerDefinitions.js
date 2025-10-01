@@ -157,7 +157,7 @@
  *
  *     Course:
  *       type: object
- *       required: [code, name, universityId]
+ *       required: [code, universityId]
  *       properties:
  *         id:
  *           type: string
@@ -166,12 +166,8 @@
  *           example: "64fbbf9e12ab34cd56ef7893"
  *         code:
  *           type: string
- *           description: Ders kodu (zorunlu)
- *           example: "BLG-231E"
- *         name:
- *           type: string
- *           description: Ders adı (zorunlu)
- *           example: "Veritabanı Sistemleri"
+ *           description: Ders kodu (zorunlu, backend otomatik olarak büyük harfe çevirir ve boşluk/tireleri kaldırır)
+ *           example: "COMP101E"
  *         universityId:
  *           type: string
  *           format: objectId
@@ -179,7 +175,7 @@
  *           example: "64fbbf9e12ab34cd56ef7892"
  *         noteCount:
  *           type: number
- *           description: Bu derse ait yüklenen toplam not sayısı (opsiyonel, default 0)
+ *           description: Bu derse ait yüklenen toplam not sayısı (opsiyonel, varsayılan 0)
  *           example: 5
  *
  *     Note:
@@ -1492,15 +1488,13 @@
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - code
  *             properties:
  *               code:
  *                 type: string
- *                 description: "Ders kodu (zorunlu)"
- *                 example: "BLG-231E"
- *               name:
- *                 type: string
- *                 description: "Ders adı (zorunlu)"
- *                 example: "Veritabanı Sistemleri"
+ *                 description: "Ders kodu (zorunlu, otomatik olarak COMP101E formatına normalize edilir)"
+ *                 example: "COMP101E"
  *     responses:
 *       201:
 *         description: "Ders oluşturuldu"
@@ -1523,7 +1517,7 @@
 *               properties:
 *                 message:
 *                   type: string
-*                   example: "Kod ve isim zorunludur."
+*                   example: "Ders kodu zorunludur"
 *       500:
 *         description: "Sunucu hatası"
 *         content:
@@ -1700,8 +1694,8 @@
  *             type: object
  *             required:
  *               - title
- *               - courseId
  *               - driveLink
+ *               - courseFormat
  *             properties:
  *               title:
  *                 type: string
@@ -1711,10 +1705,23 @@
  *                 type: string
  *                 description: Not açıklaması (opsiyonel)
  *                 example: "Final sınavında çıkabilecek konuların özeti"
- *               courseId:
+ *               courseFormat:
  *                 type: string
- *                 description: Ders ID (zorunlu)
- *                 example: "64fbbf9e12ab34cd56ef7893"
+ *                 enum: ["split", "single"]
+ *                 description: "Ders kodu formatı. split = bölüm kodu + ders numarası, single = tek parça kod"
+ *                 example: "split"
+ *               departmentCode:
+ *                 type: string
+ *                 description: "courseFormat=split için bölüm kodu (örn. COMP). Büyük-küçük harfe duyarsız, backend büyük harfe çevirir"
+ *                 example: "COMP"
+ *               courseNumber:
+ *                 type: string
+ *                 description: "courseFormat=split için ders numarası (örn. 101E). Boşluk/tire otomatik temizlenir"
+ *                 example: "101E"
+ *               fullCourseCode:
+ *                 type: string
+ *                 description: "courseFormat=single için tam ders kodu (örn. 1505001). Boşluk/tire otomatik temizlenir"
+ *                 example: "1505001"
  *               instructor:
  *                 type: string
  *                 description: Dersi veren öğretim üyesi (opsiyonel)
@@ -1722,12 +1729,16 @@
  *               driveLink:
  *                 type: string
  *                 format: uri
- *                 description: Google Drive linki (zorunlu)
+ *                 description: Google Drive / bulut linki (zorunlu)
  *                 example: "https://drive.google.com/file/abc123"
  *               year:
  *                 type: string
- *                 description: Notun yılı (opsiyonel)
- *                 example: "2024"
+ *                 description: Akademik yıl bilgisi (opsiyonel, front-end free text)
+ *                 example: "2024/2025"
+ *               semester:
+ *                 type: string
+ *                 description: Dönem bilgisi (opsiyonel, Güz/Bahar vb.)
+ *                 example: "Güz"
  *     responses:
  *       201:
  *         description: Not başarıyla yüklendi
@@ -1741,8 +1752,20 @@
  *                   example: "Not başarıyla yüklendi"
  *                 note:
  *                   $ref: '#/components/schemas/Note'
+ *                 course:
+ *                   type: object
+ *                   description: Notun bağlandığı ders özeti
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "64fbbf9e12ab34cd56ef7893"
+ *                     code:
+ *                       type: string
+ *                       example: "COMP101E"
  *       400:
  *         description: Eksik veya hatalı alan
+ *       409:
+ *         description: Aynı ders kodu için yarışan istek (duplicate key)
  *       500:
  *         description: Not yüklenemedi
  */
