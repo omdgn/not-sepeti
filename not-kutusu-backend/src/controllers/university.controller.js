@@ -7,7 +7,37 @@ const Course = require("../models/course.model");
 // Üniversiteleri listele (herkes erişebilir)
 const getAllUniversities = async (req, res) => {
   try {
-    const universities = await University.find();
+    const universities = await University.aggregate([
+      {
+        $lookup: {
+          from: "Course",
+          localField: "_id",
+          foreignField: "universityId",
+          as: "courses"
+        }
+      },
+      {
+        $lookup: {
+          from: "Note",
+          localField: "_id",
+          foreignField: "universityId",
+          as: "notes"
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          slug: 1,
+          emailDomains: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          courseCount: { $size: "$courses" },
+          noteCount: { $size: "$notes" }
+        }
+      }
+    ]);
+
     res.status(200).json({ universities });
   } catch (err) {
     res.status(500).json({ message: "Sunucu hatası", error: err.message });
