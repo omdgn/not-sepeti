@@ -3585,7 +3585,7 @@
 
 /**
  * @openapi
- * /gamification/leaderboard/university/{slug}/monthly:
+ * /gamification/leaderboard/{slug}/monthly:
  *   get:
  *     security:
  *       - bearerAuth: []
@@ -3639,7 +3639,7 @@
 
 /**
  * @openapi
- * /gamification/university/{slug}/stats:
+ * /gamification/{slug}/stats:
  *   get:
  *     security:
  *       - bearerAuth: []
