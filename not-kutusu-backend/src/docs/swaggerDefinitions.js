@@ -3093,3 +3093,88 @@
 
 
 
+
+
+/**
+ * @swagger
+ * /api/upload-to-drive:
+ *   post:
+ *     summary: "Dosyaları Google Drive'a yükle"
+ *     description: "Seçilen dosyaları ZIP'leyerek Google Drive'a yükler ve paylaşılabilir link döndürür"
+ *     tags: [File Upload]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: "Yüklenecek dosyalar (PDF ve görsel dosyaları, toplamda max 50MB)"
+ *             required:
+ *               - files
+ *     responses:
+ *       200:
+ *         description: "Dosyalar başarıyla yüklendi"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 url:
+ *                   type: string
+ *                   example: "https://drive.google.com/file/d/1ABC123xyz/view"
+ *                   description: "Google Drive paylaşım linki"
+ *                 fileName:
+ *                   type: string
+ *                   example: "dosyalar-1699123456789.zip"
+ *                   description: "Oluşturulan ZIP dosyasının adı"
+ *                 fileCount:
+ *                   type: integer
+ *                   example: 5
+ *                   description: "ZIP'lenen dosya sayısı"
+ *                 message:
+ *                   type: string
+ *                   example: "5 dosya başarıyla ZIP'lenerek Drive'a yüklendi"
+ *       400:
+ *         description: "Geçersiz istek"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "En az bir dosya seçmelisiniz"
+ *       401:
+ *         description: "Token eksik"
+ *       403:
+ *         description: "Token geçersiz"
+ *       413:
+ *         description: "Dosya boyutu çok büyük (max 50MB toplam)"
+ *       500:
+ *         description: "Sunucu hatası"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Dosya yükleme hatası: Drive API connection failed"
+ */

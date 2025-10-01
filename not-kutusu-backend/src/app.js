@@ -48,6 +48,7 @@ const commentRoutes = require("./routes/comment.routes");
 const userRoutes = require("./routes/user.routes");
 const departmentCodeRoutes = require("./routes/departmentCode.routes");
 const suggestionRoutes = require("./routes/suggestion.routes");
+const uploadRoutes = require("./routes/upload.routes");
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -59,6 +60,7 @@ app.use("/api", commentRoutes);
 app.use("/api", userRoutes);
 app.use("/api", departmentCodeRoutes);
 app.use("/api", suggestionRoutes);
+app.use("/api", uploadRoutes);
 
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
