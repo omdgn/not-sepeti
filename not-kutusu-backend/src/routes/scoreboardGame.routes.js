@@ -17,10 +17,10 @@ router.get("/user/:id", getUserGamification);
 router.get("/user/:id/badges", getUserBadges);
 
 // 📊 Liderlik Tabloları
-router.get("/leaderboard/university/:slug/monthly", getUniversityMonthlyLeaderboard);
+router.get("/leaderboard/:slug/monthly", getUniversityMonthlyLeaderboard);
 router.get("/leaderboard/global", getGlobalLeaderboard);
 
 // 📈 İstatistikler
-router.get("/university/:slug/stats", getUniversityStats);
+router.get("/:slug/stats", getUniversityStats);
 
 module.exports = router;
