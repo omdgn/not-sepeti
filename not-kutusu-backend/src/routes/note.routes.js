@@ -3,7 +3,6 @@ const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const {
   uploadNote,
-  getNotes,
   getNoteById,
   getNotesByCourseSlug,
   likeNote,
@@ -16,8 +15,8 @@ const {
 } = require("../controllers/note.controller");
 
 router.post("/notes", authMiddleware, uploadNote);
-router.get("/notes", authMiddleware, getNotes);
 router.get("/notes/:id", authMiddleware, getNoteById);
+router.get("/:slug/notes", authMiddleware, getNotesByCourseSlug);
 router.get("/:slug/courses/:courseId/notes", authMiddleware, getNotesByCourseSlug);
 router.patch("/notes/:id/like", authMiddleware, likeNote);
 router.patch("/notes/:id/dislike", authMiddleware, dislikeNote);

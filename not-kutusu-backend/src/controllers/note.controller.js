@@ -206,27 +206,39 @@ const uploadNote = async (req, res) => {
   }
 };
 
-// 🟡 Notları Listele (opsiyonel ders filtresiyle)
-const getNotes = async (req, res) => {
+// 🔵 Slug + Course ile Notları Listele (courseId opsiyonel)
+const getNotesByCourseSlug = async (req, res) => {
   try {
-    const { course } = req.query;
+    const { slug, courseId } = req.params;
+    const userUniversityId = req.user.universityId;
+
+    const university = await University.findOne({ slug });
+    if (!university) {
+      return res.status(404).json({ message: "Üniversite bulunamadı." });
+    }
+
+    if (university._id.toString() !== userUniversityId.toString()) {
+      return res.status(403).json({ message: "Bu üniversiteye erişim izniniz yok." });
+    }
+
     const filter = {
-      universityId: req.user.universityId,
+      universityId: university._id,
       isActive: true
     };
 
-    if (course) {
-      filter.courseId = course;
+    // courseId opsiyonel
+    if (courseId) {
+      filter.courseId = courseId;
     }
 
     const notes = await Note.find(filter)
-      .populate("courseId", "code name")
+      .populate("courseId", "code type noteCount")
       .populate("createdBy", "name email")
       .sort({ createdAt: -1 });
 
     res.json(notes);
   } catch (err) {
-    console.error("Not listeleme hatası:", err);
+    console.error("Slug ile not listeleme hatası:", err);
     res.status(500).json({ message: "Notlar listelenemedi" });
   }
 };
@@ -254,37 +266,6 @@ const getNoteById = async (req, res) => {
   } catch (err) {
     console.error("Not detay hatası:", err);
     res.status(500).json({ message: "Not getirilemedi" });
-  }
-};
-
-// 🔵 Slug + Course ile Notları Listele
-const getNotesByCourseSlug = async (req, res) => {
-  try {
-    const { slug, courseId } = req.params;
-    const userUniversityId = req.user.universityId;
-
-    const university = await University.findOne({ slug });
-    if (!university) {
-      return res.status(404).json({ message: "Üniversite bulunamadı." });
-    }
-
-    if (university._id.toString() !== userUniversityId.toString()) {
-      return res.status(403).json({ message: "Bu üniversiteye erişim izniniz yok." });
-    }
-
-    const notes = await Note.find({
-      courseId,
-      universityId: university._id,
-      isActive: true
-    })
-      .populate("courseId", "code name")
-      .populate("createdBy", "name email")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({ notes });
-  } catch (err) {
-    console.error("Slug+Course ile not çekme hatası:", err);
-    res.status(500).json({ message: "Sunucu hatası" });
   }
 };
 
@@ -668,7 +649,6 @@ const searchNotesWithSearchBar = async (req, res) => {
 
 module.exports = {
   uploadNote,
-  getNotes,
   getNoteById,
   getNotesByCourseSlug,
   likeNote,

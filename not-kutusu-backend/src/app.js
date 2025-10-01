@@ -43,7 +43,7 @@ const testRoutes = require("./routes/test.routes");
 const courseRoutes = require("./routes/course.routes");
 const noteRoutes = require("./routes/note.routes");
 const universityRoutes = require("./routes/university.routes");
-const { swaggerUi, swaggerSpec } = require("./swagger");
+const { swaggerUi, swaggerSpec, swaggerUiOptions, themeToggleScript } = require("./swagger");
 const commentRoutes = require("./routes/comment.routes");
 const userRoutes = require("./routes/user.routes");
 const departmentCodeRoutes = require("./routes/departmentCode.routes");
@@ -64,8 +64,13 @@ app.use("/api", suggestionRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api/gamification", scoreboardGameRoutes);
 
+// Swagger dark/light tema için gerekli inline script
+app.get("/swagger-theme-toggle.js", (req, res) => {
+  res.type("application/javascript").send(themeToggleScript);
+});
+
 // Swagger
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 // Test route
 app.get("/ping", (req, res) => {

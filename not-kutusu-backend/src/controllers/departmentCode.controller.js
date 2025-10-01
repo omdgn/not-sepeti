@@ -1,13 +1,20 @@
 const DepartmentCode = require("../models/departmentCode.model");
 const University = require("../models/university.model");
 
-// 🎓 Slug ile (public kullanım – token gerekmez)
+// 🎓 Slug ile ders kodlarını getir (token gerekli)
 const getCodesBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
+    const userUniversityId = req.user.universityId;
+
     const university = await University.findOne({ slug });
     if (!university) {
       return res.status(404).json({ message: "Üniversite bulunamadı." });
+    }
+
+    // Token'daki üniversite ile slug'daki üniversite uyuşmalı
+    if (university._id.toString() !== userUniversityId.toString()) {
+      return res.status(403).json({ message: "Bu üniversiteye erişim izniniz yok." });
     }
 
     const codes = await DepartmentCode.find({ universityId: university._id })
@@ -16,19 +23,6 @@ const getCodesBySlug = async (req, res) => {
     res.json({ codes });
   } catch (err) {
     console.error("getCodesBySlug hata:", err.message);
-    res.status(500).json({ message: "Kodlar getirilemedi." });
-  }
-};
-
-// 🔐 Giriş yapmış kullanıcının üniversitesine göre kodları getir
-const getMyUniversityCodes = async (req, res) => {
-  try {
-    const codes = await DepartmentCode.find({ universityId: req.user.universityId })
-      .sort({ code: 1 })
-      .select("code type createdAt");
-    res.json({ codes });
-  } catch (err) {
-    console.error("getMyUniversityCodes hata:", err.message);
     res.status(500).json({ message: "Kodlar getirilemedi." });
   }
 };
@@ -118,7 +112,6 @@ const deleteDepartmentCode = async (req, res) => {
 
 module.exports = {
   getCodesBySlug,
-  getMyUniversityCodes,
   addDepartmentCode,
   getAllDepartmentCodes,
   updateDepartmentCode,

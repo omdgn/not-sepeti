@@ -2,14 +2,10 @@ const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const {
-  getCodesBySlug,
-  getMyUniversityCodes
+  getCodesBySlug
 } = require("../controllers/departmentCode.controller");
 
-// Herkes erişebilir (slug ile – token gerekmez)
-router.get("/:slug/department-codes", getCodesBySlug);
-
-// Giriş yapmış kullanıcı
-router.get("/department-codes/my-university", authMiddleware, getMyUniversityCodes);
+// Token gerekli - slug ile ders kodlarını getir
+router.get("/:slug/department-codes", authMiddleware, getCodesBySlug);
 
 module.exports = router;

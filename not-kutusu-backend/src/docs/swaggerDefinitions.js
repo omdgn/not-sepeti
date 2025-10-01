@@ -1772,19 +1772,22 @@
 
 /**
  * @openapi
- * /notes:
+ * /{slug}/notes:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     tags: [Notes]
- *     summary: Notları listele (ders filtresiyle opsiyonel)
+ *     summary: Bir üniversitenin tüm aktif notlarını listele
+ *     description: |
+ *       Verilen `slug` değerine sahip üniversiteye ait tüm aktif notları döndürür.
+ *       İçeride ders ID'si parametre olarak iletilmez; belirli bir ders için not almak isterseniz `/{slug}/courses/{courseId}/notes` endpointini kullanın.
  *     parameters:
- *       - in: query
- *         name: course
+ *       - in: path
+ *         name: slug
+ *         required: true
  *         schema:
  *           type: string
- *         required: false
- *         description: Ders ID (opsiyonel)
+ *         description: Üniversite slug değeri (örn. `itu`)
  *     responses:
  *       200:
  *         description: Notlar listelendi
@@ -1794,6 +1797,10 @@
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Note'
+ *       403:
+ *         description: Token'daki üniversite slug ile uyuşmazsa erişim reddedilir
+ *       404:
+ *         description: Üniversite bulunamadı
  */
 
 /**
@@ -1849,12 +1856,9 @@
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 notes:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Note'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Note'
  */
 
 /**
@@ -2929,12 +2933,14 @@
  * @openapi
  * /{slug}/department-codes:
  *   get:
+ *     security:
+ *       - bearerAuth: []
  *     tags: [DepartmentCode]
- *     summary: "Slug ile ders kodlarını getir (public)"
+ *     summary: "Slug ile ders kodlarını getir (giriş yapmış kullanıcı)"
  *     description: |
  *       Belirtilen üniversite `slug` değerine göre o üniversiteye ait tüm ders kodlarını döndürür.
- *       - Token gerekmez.
- *       - Frontend'de not yükleme ekranında dropdown listesi için kullanılabilir.
+ *       - Token gereklidir ve token'daki üniversite ile slug uyuşmalıdır.
+ *       - Not yükleme ekranında dropdown listesi için kullanılabilir.
  *     parameters:
  *       - in: path
  *         name: slug
@@ -2954,32 +2960,10 @@
  *                   type: array
  *                   items:
  *                     $ref: "#/components/schemas/DepartmentCode"
+ *       403:
+ *         description: "Token'daki üniversite ile slug uyuşmazsa erişim reddedilir"
  *       404:
  *         description: "Üniversite bulunamadı"
- *       500:
- *         description: "Sunucu hatası"
- */
-
-/**
- * @openapi
- * /department-codes/my-university:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [DepartmentCode]
- *     summary: "Giriş yapan kullanıcının üniversitesine ait kodları getir"
- *     responses:
- *       200:
- *         description: "Kodlar getirildi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 codes:
- *                   type: array
- *                   items:
- *                     $ref: "#/components/schemas/DepartmentCode"
  *       500:
  *         description: "Sunucu hatası"
  */
