@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const DepartmentCodeSchema = new mongoose.Schema({
   code: { type: String, required: true, trim: true, uppercase: true },
+  type: {
+    type: String,
+    enum: ["split", "single"],
+    default: "split"    // Varsayılan olarak split (COMP gibi)
+  },
   universityId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "University",

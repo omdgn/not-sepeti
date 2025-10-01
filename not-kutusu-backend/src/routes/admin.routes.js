@@ -20,6 +20,14 @@ const {
   adminSearchNotesWithSearchBar
 } = require("../controllers/admin.controller");
 
+const { createCourse } = require("../controllers/course.controller");
+const {
+  addDepartmentCode,
+  getAllDepartmentCodes,
+  updateDepartmentCode,
+  deleteDepartmentCode
+} = require("../controllers/departmentCode.controller");
+
 // 📌 Bu route dışındaki her şey token ister!
 router.post("/login", adminLogin); // -> /api/admin/login
 
@@ -52,5 +60,12 @@ router.delete("/suggestions/:id", deleteSuggestionByAdmin);
 
 // Arama
 router.get("/search-bar", adminSearchNotesWithSearchBar);
+
+// Ders ve Bölüm Kodu Yönetimi (sadece admin)
+router.post("/courses", createCourse);
+router.post("/department-codes", addDepartmentCode);
+router.get("/department-codes", getAllDepartmentCodes);
+router.patch("/department-codes/:id", updateDepartmentCode);
+router.delete("/department-codes/:id", deleteDepartmentCode);
 
 module.exports = router;

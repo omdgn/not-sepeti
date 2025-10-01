@@ -125,6 +125,7 @@ const uploadNote = async (req, res) => {
         },
         {
           code: departmentCode.toUpperCase().trim(),
+          type: "split",
           universityId: req.user.universityId,
           addedBy: req.user.userId
         },
@@ -139,6 +140,7 @@ const uploadNote = async (req, res) => {
         },
         {
           code: fullCourseCode.toUpperCase().trim().replace(/[\s-]/g, ""),
+          type: "single",
           universityId: req.user.universityId,
           addedBy: req.user.userId
         },
@@ -154,6 +156,7 @@ const uploadNote = async (req, res) => {
       },
       {
         code: finalCourseCode,
+        type: courseFormat, // "split" veya "single"
         universityId: req.user.universityId,
         $inc: { noteCount: 1 } // Aynı sorguda artır
       },

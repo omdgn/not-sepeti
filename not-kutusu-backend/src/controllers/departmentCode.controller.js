@@ -10,7 +10,9 @@ const getCodesBySlug = async (req, res) => {
       return res.status(404).json({ message: "Üniversite bulunamadı." });
     }
 
-    const codes = await DepartmentCode.find({ universityId: university._id }).sort({ code: 1 });
+    const codes = await DepartmentCode.find({ universityId: university._id })
+      .sort({ code: 1 })
+      .select("code type createdAt");
     res.json({ codes });
   } catch (err) {
     console.error("getCodesBySlug hata:", err.message);
@@ -21,7 +23,9 @@ const getCodesBySlug = async (req, res) => {
 // 🔐 Giriş yapmış kullanıcının üniversitesine göre kodları getir
 const getMyUniversityCodes = async (req, res) => {
   try {
-    const codes = await DepartmentCode.find({ universityId: req.user.universityId }).sort({ code: 1 });
+    const codes = await DepartmentCode.find({ universityId: req.user.universityId })
+      .sort({ code: 1 })
+      .select("code type createdAt");
     res.json({ codes });
   } catch (err) {
     console.error("getMyUniversityCodes hata:", err.message);

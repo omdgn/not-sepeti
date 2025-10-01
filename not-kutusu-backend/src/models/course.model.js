@@ -7,6 +7,11 @@ const CourseSchema = new mongoose.Schema({
     uppercase: true,    // Otomatik büyük harf
     trim: true          // Boşlukları temizle
   },
+  type: {
+    type: String,
+    enum: ["split", "single"],
+    default: "split"    // Varsayılan olarak split (COMP101E gibi)
+  },
   universityId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "University",

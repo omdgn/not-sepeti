@@ -1,5 +1,4 @@
 const Course = require("../models/course.model");
-const Note = require("../models/note.model");
 
 // Yeni ders oluştur (Admin)
 const createCourse = async (req, res) => {
@@ -54,20 +53,11 @@ const getCourses = async (req, res) => {
 const getCoursesByUniversity = async (req, res) => {
   try {
     const universityId = req.user.universityId;
-    const courses = await Course.find({ universityId }).sort({ createdAt: -1 });
+    const courses = await Course.find({ universityId })
+      .sort({ createdAt: -1 })
+      .select("code type noteCount createdAt");
 
-    // Her ders için not sayısını hesapla
-    const coursesWithNoteCount = await Promise.all(
-      courses.map(async (course) => {
-        const noteCount = await Note.countDocuments({ courseId: course._id });
-        return {
-          ...course.toObject(),
-          noteCount
-        };
-      })
-    );
-
-    res.json(coursesWithNoteCount);
+    res.json(courses);
   } catch (err) {
     console.error("Uni'ye göre ders çekme hatası:", err);
     res.status(500).json({ message: "Sunucu hatası" });
@@ -93,7 +83,7 @@ const getCoursesBySlug = async (req, res) => {
 
     const courses = await Course.find({ universityId: university._id })
       .sort({ createdAt: -1 })
-      .select("code noteCount");
+      .select("code type noteCount");
     res.json(courses);
   } catch (err) {
     console.error("Slug’a göre ders çekme hatası:", err);
