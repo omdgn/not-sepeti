@@ -933,7 +933,7 @@
  *       - bearerAuth: []
  *     tags: [Admin]
  *     summary: Pasifleştirilmiş notları listele
- *     description: isActive = false olan notları listeler (10+ rapor nedeniyle otomatik pasifleştirilmiş)
+ *     description: isActive = false olan notları listeler (15+ rapor nedeniyle otomatik pasifleştirilmiş)
  *     responses:
  *       200:
  *         description: "Pasif not listesi"
