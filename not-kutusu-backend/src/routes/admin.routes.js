@@ -14,7 +14,8 @@ const {
   adminLogin,
   getAllSuggestions,
   updateSuggestionStatus,
-  deleteSuggestionByAdmin
+  deleteSuggestionByAdmin,
+  adminSearchNotesWithSearchBar
 } = require("../controllers/admin.controller");
 
 // 📌 Bu route dışındaki her şey token ister!
@@ -44,5 +45,8 @@ router.patch("/users/:id/unban", unbanUser);
 router.get("/suggestions", getAllSuggestions);
 router.put("/suggestions/:id/status", updateSuggestionStatus);
 router.delete("/suggestions/:id", deleteSuggestionByAdmin);
+
+// Arama
+router.get("/search-bar", adminSearchNotesWithSearchBar);
 
 module.exports = router;

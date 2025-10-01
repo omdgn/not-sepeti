@@ -11,7 +11,8 @@ const {
   reportNote,
   getTopContributors,
   getTopNotes,
-  searchNotes
+  searchNotes,
+  searchNotesWithSearchBar
 } = require("../controllers/note.controller");
 
 router.post("/notes", authMiddleware, uploadNote);
@@ -24,6 +25,7 @@ router.patch("/notes/:id/report", authMiddleware, reportNote);
 router.get("/:slug/top-contributors", authMiddleware, getTopContributors);
 router.get("/:slug/top-notes", authMiddleware, getTopNotes);
 router.get("/:slug/notes/search", authMiddleware, searchNotes);
+router.get("/:slug/search-bar", authMiddleware, searchNotesWithSearchBar);
 
 
 

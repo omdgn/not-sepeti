@@ -1247,6 +1247,105 @@
  *         description: "Sunucu hatası"
  */
 
+/**
+ * @openapi
+ * /admin/search-bar:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Admin - Search Bar ile not arama (Pagination)
+ *     description: |
+ *       Admin paneli için tasarlanmış arama endpoint'i.
+ *       - Sadece title, description ve course code alanlarında arama yapar
+ *       - Pagination desteği vardır (default: 15 sonuç/sayfa)
+ *       - Admin tüm üniversitelerde arama yapabilir
+ *       - Opsiyonel olarak universitySlug parametresi ile tek bir üniversitede arama yapılabilir
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Arama terimi
+ *         example: "algorithm"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 15
+ *         description: Sayfa başına sonuç sayısı
+ *       - in: query
+ *         name: universitySlug
+ *         schema:
+ *           type: string
+ *         description: Üniversite slug değeri (opsiyonel, belirtilmezse tüm üniversitelerde arama yapar)
+ *         example: "bogazici"
+ *     responses:
+ *       200:
+ *         description: Arama sonuçları başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Note'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 5
+ *                     totalResults:
+ *                       type: integer
+ *                       example: 67
+ *                     resultsPerPage:
+ *                       type: integer
+ *                       example: 15
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPrevPage:
+ *                       type: boolean
+ *                       example: false
+ *       400:
+ *         description: Arama terimi gerekli
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Arama terimi gerekli."
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yalnızca admin erişebilir"
+ *       404:
+ *         description: Üniversite bulunamadı (universitySlug belirtildiğinde)
+ *       500:
+ *         description: Sunucu hatası
+ */
+
 
 
 
@@ -1776,6 +1875,105 @@
  *     responses:
  *       200:
  *         description: Arama sonuçları
+ */
+
+/**
+ * @openapi
+ * /{slug}/search-bar:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notes]
+ *     summary: Search Bar ile not arama (Pagination)
+ *     description: |
+ *       Frontend search bar'ından kullanılmak üzere tasarlanmış arama endpoint'i.
+ *       - Sadece title, description ve course code alanlarında arama yapar
+ *       - Pagination desteği vardır (default: 15 sonuç/sayfa)
+ *       - Kullanıcı sadece kendi üniversitesindeki notları arayabilir
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Üniversite slug değeri
+ *         example: "bogazici"
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Arama terimi
+ *         example: "algorithm"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 15
+ *         description: Sayfa başına sonuç sayısı
+ *     responses:
+ *       200:
+ *         description: Arama sonuçları başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Note'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 5
+ *                     totalResults:
+ *                       type: integer
+ *                       example: 67
+ *                     resultsPerPage:
+ *                       type: integer
+ *                       example: 15
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *                     hasPrevPage:
+ *                       type: boolean
+ *                       example: false
+ *       400:
+ *         description: Arama terimi gerekli
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Arama terimi gerekli."
+ *       403:
+ *         description: Üniversiteye erişim izni yok
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bu üniversiteye erişim izniniz yok."
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Sunucu hatası
  */
 
 

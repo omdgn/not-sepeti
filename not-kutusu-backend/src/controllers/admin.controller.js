@@ -365,6 +365,87 @@ const deleteSuggestionByAdmin = async (req, res) => {
   }
 };
 
+// 🔎 Admin - Search Bar ile Not Arama (Pagination)
+const adminSearchNotesWithSearchBar = async (req, res) => {
+  try {
+    const notAdmin = checkAdmin(req, res);
+    if (notAdmin) return notAdmin;
+
+    const { q, page = 1, limit = 15, universitySlug } = req.query;
+
+    if (!q || q.trim() === "") {
+      return res.status(400).json({ message: "Arama terimi gerekli." });
+    }
+
+    const regex = new RegExp(q, "i");
+    const Course = require("../models/course.model");
+
+    let filter = {};
+
+    // Eğer üniversite slug'ı verilmişse, sadece o üniversiteye ait notları getir
+    if (universitySlug) {
+      const university = await University.findOne({ slug: universitySlug });
+      if (!university) {
+        return res.status(404).json({ message: "Üniversite bulunamadı." });
+      }
+      filter.universityId = university._id;
+    }
+
+    // Course code eşleşmeleri
+    const courseQuery = { code: regex };
+    if (filter.universityId) {
+      courseQuery.universityId = filter.universityId;
+    }
+
+    const matchedCourses = await Course.find(courseQuery).select("_id");
+    const matchedCourseIds = matchedCourses.map(c => c._id);
+
+    // Pagination hesaplamaları
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Arama query'si
+    const searchQuery = {
+      ...filter,
+      $or: [
+        { title: regex },
+        { description: regex },
+        { courseId: { $in: matchedCourseIds } }
+      ]
+    };
+
+    // Toplam sonuç sayısı
+    const totalResults = await Note.countDocuments(searchQuery);
+
+    // Notları getir
+    const notes = await Note.find(searchQuery)
+      .populate("courseId", "code name")
+      .populate("createdBy", "name email")
+      .populate("universityId", "name slug")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalPages = Math.ceil(totalResults / limitNum);
+
+    res.status(200).json({
+      notes,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalResults,
+        resultsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
+      }
+    });
+  } catch (err) {
+    console.error("Admin search bar arama hatası:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
 module.exports = {
   getReportedNotes,
   getReportedComments,
@@ -378,5 +459,6 @@ module.exports = {
   adminLogin,
   getAllSuggestions,
   updateSuggestionStatus,
-  deleteSuggestionByAdmin
+  deleteSuggestionByAdmin,
+  adminSearchNotesWithSearchBar
 };

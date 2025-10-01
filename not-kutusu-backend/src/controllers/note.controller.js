@@ -434,6 +434,81 @@ const searchNotes = async (req, res) => {
   }
 };
 
+// 🔎 Search Bar ile Not Arama (Pagination)
+const searchNotesWithSearchBar = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { q, page = 1, limit = 15 } = req.query;
+    const userUniversityId = req.user.universityId;
+
+    if (!q || q.trim() === "") {
+      return res.status(400).json({ message: "Arama terimi gerekli." });
+    }
+
+    const university = await University.findOne({ slug });
+    if (!university || university._id.toString() !== userUniversityId.toString()) {
+      return res.status(403).json({ message: "Bu üniversiteye erişim izniniz yok." });
+    }
+
+    const regex = new RegExp(q, "i");
+
+    // Course code eşleşmeleri
+    const matchedCourses = await Course.find({
+      universityId: university._id,
+      code: regex
+    }).select("_id");
+
+    const matchedCourseIds = matchedCourses.map(c => c._id);
+
+    // Pagination hesaplamaları
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Toplam sonuç sayısı
+    const totalResults = await Note.countDocuments({
+      universityId: university._id,
+      $or: [
+        { title: regex },
+        { description: regex },
+        { courseId: { $in: matchedCourseIds } }
+      ]
+    });
+
+    // Notları getir
+    const notes = await Note.find({
+      universityId: university._id,
+      $or: [
+        { title: regex },
+        { description: regex },
+        { courseId: { $in: matchedCourseIds } }
+      ]
+    })
+      .populate("courseId", "code name")
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalPages = Math.ceil(totalResults / limitNum);
+
+    res.status(200).json({
+      notes,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalResults,
+        resultsPerPage: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
+      }
+    });
+  } catch (err) {
+    console.error("Search bar arama hatası:", err);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
 
 
 module.exports = {
@@ -446,5 +521,6 @@ module.exports = {
   reportNote,
   getTopContributors,
   getTopNotes,
-  searchNotes
+  searchNotes,
+  searchNotesWithSearchBar
 };
