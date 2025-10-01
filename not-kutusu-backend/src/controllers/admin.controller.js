@@ -3,6 +3,7 @@ const Comment = require("../models/comment.model");
 const User = require("../models/user.model");
 const University = require("../models/university.model");
 const UserSuggestion = require("../models/userSuggestion.model");
+const gamificationService = require("../services/gamificationService");
 
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwt"); 
@@ -218,8 +219,15 @@ const deleteNoteByAdmin = async (req, res) => {
     const notAdmin = checkAdmin(req, res);
     if (notAdmin) return notAdmin;
 
-    const note = await Note.findByIdAndDelete(req.params.id);
+    const note = await Note.findById(req.params.id);
     if (!note) return res.status(404).json({ message: "Not bulunamadı" });
+
+    const noteOwnerId = note.createdBy.toString();
+
+    await Note.findByIdAndDelete(req.params.id);
+
+    // 🎮 Gamification: Not silme puanı
+    await gamificationService.onNoteDelete(noteOwnerId);
 
     res.json({ message: "Not admin tarafından silindi" });
   } catch (err) {
@@ -234,8 +242,15 @@ const deleteCommentByAdmin = async (req, res) => {
     const notAdmin = checkAdmin(req, res);
     if (notAdmin) return notAdmin;
 
-    const comment = await Comment.findByIdAndDelete(req.params.id);
+    const comment = await Comment.findById(req.params.id);
     if (!comment) return res.status(404).json({ message: "Yorum bulunamadı" });
+
+    const commentOwnerId = comment.userId.toString();
+
+    await Comment.findByIdAndDelete(req.params.id);
+
+    // 🎮 Gamification: Yorum silme puanı
+    await gamificationService.onCommentDelete(commentOwnerId);
 
     res.json({ message: "Yorum admin tarafından silindi" });
   } catch (err) {

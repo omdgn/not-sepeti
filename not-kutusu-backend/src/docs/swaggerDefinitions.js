@@ -43,8 +43,39 @@
  *           example: "https://example.com/avatar.png"
  *         score:
  *           type: number
- *           description: "Kullanıcı puanı (varsayılan 0)"
- *           example: 120
+ *           description: "Toplam kullanıcı puanı (varsayılan 0)"
+ *           example: 520
+ *         monthlyScore:
+ *           type: number
+ *           description: "Aylık kullanıcı puanı (her ay sıfırlanır)"
+ *           example: 85
+ *         level:
+ *           type: number
+ *           description: "Kullanıcı seviyesi (1-6 arası)"
+ *           example: 3
+ *         badges:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: "Kullanıcının kazandığı rozet ID'leri"
+ *           example: ["first_note", "contributor", "social"]
+ *         stats:
+ *           type: object
+ *           description: "Kullanıcı istatistikleri"
+ *           properties:
+ *             notes:
+ *               type: number
+ *               example: 15
+ *             comments:
+ *               type: number
+ *               example: 42
+ *             likesReceived:
+ *               type: number
+ *               example: 73
+ *         lastMonthlyReset:
+ *           type: string
+ *           format: date-time
+ *           description: "Son aylık puan sıfırlama tarihi"
  *         aboutMe:
  *           type: string
  *           description: "Kullanıcı hakkında kısa bilgi (opsiyonel)"
@@ -3467,4 +3498,166 @@
  *                 message:
  *                   type: string
  *                   example: "Dosya yükleme hatası: Drive API connection failed"
+ */
+
+/**
+ * @openapi
+ * /gamification/user/{id}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Kullanıcının oyunlaştırma bilgilerini getir
+ *     description: Kullanıcının puan, seviye, rozet ve istatistik bilgilerini döner
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Kullanıcı ID
+ *     responses:
+ *       200:
+ *         description: Başarılı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     profilePic:
+ *                       type: string
+ *                     university:
+ *                       type: object
+ *                 gamification:
+ *                   type: object
+ *                   properties:
+ *                     score:
+ *                       type: number
+ *                     monthlyScore:
+ *                       type: number
+ *                     level:
+ *                       type: number
+ *                     levelInfo:
+ *                       type: object
+ *                     badges:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     stats:
+ *                       type: object
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /gamification/user/{id}/badges:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Kullanıcının rozetlerini getir
+ *     description: Kullanıcının kazandığı ve henüz kazanmadığı tüm rozetleri döner
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Kullanıcı ID
+ *     responses:
+ *       200:
+ *         description: Başarılı
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /gamification/leaderboard/university/{slug}/monthly:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Üniversite aylık liderlik tablosu
+ *     description: Belirtilen üniversitenin aylık puan sıralaması (Top 50)
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Üniversite slug
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: number
+ *           default: 50
+ *         description: Kaç kullanıcı gösterilecek
+ *     responses:
+ *       200:
+ *         description: Başarılı
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /gamification/leaderboard/global:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Global liderlik tablosu
+ *     description: Tüm kullanıcıların toplam puan sıralaması (Top 50)
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: number
+ *           default: 50
+ *         description: Kaç kullanıcı gösterilecek
+ *     responses:
+ *       200:
+ *         description: Başarılı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /gamification/university/{slug}/stats:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Üniversite istatistikleri
+ *     description: Belirtilen üniversitenin oyunlaştırma istatistikleri
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Üniversite slug
+ *     responses:
+ *       200:
+ *         description: Başarılı
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Sunucu hatası
  */

@@ -3,6 +3,7 @@ const Note = require("../models/note.model");
 const University = require("../models/university.model");
 const Course = require("../models/course.model");
 const User = require("../models/user.model");
+const gamificationService = require("../services/gamificationService");
 
 // 🔒 URL doğrulama helper
 const isValidURL = (url) => {
@@ -71,6 +72,9 @@ const uploadNote = async (req, res) => {
       createdBy: req.user.userId,
       universityId: req.user.universityId
     });
+
+    // 🎮 Gamification: Not yükleme puanı
+    await gamificationService.onNoteUpload(req.user.userId);
 
     res.status(201).json({ message: "Not başarıyla yüklendi", note: newNote });
   } catch (error) {
@@ -178,6 +182,9 @@ const likeNote = async (req, res) => {
         // 👍 Like varsa tekrar tıklanmış = kaldır
         note.reactions = note.reactions.filter(r => r.userId.toString() !== userId);
         note.likes--;
+
+        // 🎮 Gamification: Like kaldırıldı
+        await gamificationService.onLikeRemoved(note.createdBy.toString());
       } else {
         // 👎 veya 🚩 varsa, önce kaldır sonra 👍 ekle
         if (existingReaction.type === "dislike") note.dislikes--;
@@ -186,11 +193,17 @@ const likeNote = async (req, res) => {
         note.reactions = note.reactions.filter(r => r.userId.toString() !== userId);
         note.reactions.push({ userId, type: "like", processDescription });
         note.likes++;
+
+        // 🎮 Gamification: Yeni like aldı
+        await gamificationService.onLikeReceived(note.createdBy.toString());
       }
     } else {
       // 🔄 Hiç reaksiyonu yoksa direkt ekle
       note.reactions.push({ userId, type: "like", processDescription });
       note.likes++;
+
+      // 🎮 Gamification: Yeni like aldı
+      await gamificationService.onLikeReceived(note.createdBy.toString());
     }
 
     await note.save();

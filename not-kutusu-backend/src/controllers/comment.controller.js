@@ -1,5 +1,6 @@
 const Comment = require("../models/comment.model");
 const Note = require("../models/note.model");
+const gamificationService = require("../services/gamificationService");
 
 // 🟢 Yorum Ekle 
 const addComment = async (req, res) => {
@@ -35,6 +36,9 @@ const addComment = async (req, res) => {
     // userId'yi populate et
     await newComment.populate("userId", "name");
 
+    // 🎮 Gamification: Yorum puanı
+    await gamificationService.onCommentPost(userId);
+
     res.status(201).json({ message: "Yorum eklendi", comment: newComment });
   } catch (err) {
     console.error("Yorum ekleme hatası:", err);
@@ -66,6 +70,9 @@ const deleteComment = async (req, res) => {
     }
 
     await Comment.findByIdAndDelete(id);
+
+    // 🎮 Gamification: Yorum silme puanı
+    await gamificationService.onCommentDelete(userId);
 
     res.json({ message: "Yorum silindi" });
   } catch (err) {

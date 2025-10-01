@@ -14,7 +14,19 @@ const UserSchema = new mongoose.Schema({
   },
   
   profilePic: { type: String }, // Profil fotoğrafı URL'si
-  score: { type: Number, default: 0 },
+
+  // 🎮 Gamification
+  score: { type: Number, default: 0, min: 0 },
+  monthlyScore: { type: Number, default: 0, min: 0 },
+  level: { type: Number, default: 1, min: 1, max: 6 },
+  badges: [{ type: String }],
+  stats: {
+    notes: { type: Number, default: 0, min: 0 },
+    comments: { type: Number, default: 0, min: 0 },
+    likesReceived: { type: Number, default: 0, min: 0 }
+  },
+  lastMonthlyReset: { type: Date, default: Date.now },
+
   aboutMe: { type: String }, // 🆕 Hakkında
   department: { type: String }, // 🆕 Bölüm
   socialLinks: {                // 🆕 Sosyal linkler
@@ -41,6 +53,10 @@ const UserSchema = new mongoose.Schema({
 
 UserSchema.index({ universityId: 1 });
 UserSchema.index({ name: "text" });
+UserSchema.index({ score: -1 });
+UserSchema.index({ monthlyScore: -1 });
+UserSchema.index({ universityId: 1, monthlyScore: -1 });
+UserSchema.index({ level: -1 });
 
 module.exports = mongoose.model("User", UserSchema, "User");
 
