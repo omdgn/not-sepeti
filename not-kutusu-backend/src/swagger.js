@@ -165,6 +165,28 @@ body.swagger-dark .swagger-ui .property-deprecated {
   color: #e2e8f0;
 }
 
+body.swagger-dark .swagger-ui .model-box,
+body.swagger-dark .swagger-ui .model-container,
+body.swagger-dark .swagger-ui .model,
+body.swagger-dark .swagger-ui .model-toggle,
+body.swagger-dark .swagger-ui .model-title,
+body.swagger-dark .swagger-ui .model .property .name,
+body.swagger-dark .swagger-ui .model .property .description,
+body.swagger-dark .swagger-ui .prop-format,
+body.swagger-dark .swagger-ui .prop-type,
+body.swagger-dark .swagger-ui .property-row,
+body.swagger-dark .swagger-ui .property-name {
+  color: #f8fafc;
+}
+
+body.swagger-dark .swagger-ui .model-box,
+body.swagger-dark .swagger-ui .model,
+body.swagger-dark .swagger-ui .model-container,
+body.swagger-dark .swagger-ui .model .property-row {
+  background-color: #1f2937;
+  border-color: #334155;
+}
+
 body.swagger-dark .swagger-ui .opblock-tag,
 body.swagger-dark .swagger-ui .opblock-summary-path,
 body.swagger-dark .swagger-ui .opblock-summary-method,

@@ -2,6 +2,12 @@ node_modules/
 .env
 .DS_Store
 Thumbs.db
-src/seedAdmin.js        //npm run admin 
+
+# (private)
+src/seeds/
+src/seeds/**
+
+# (private)
+package.local.json
 
 # srm -rf .git  bu komut git bağlantısını kesiyor.
