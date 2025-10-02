@@ -274,6 +274,149 @@
  *           type: string
  *           format: date-time
  *
+ *     NotificationActor:
+ *       type: object
+ *       description: Bildirimi tetikleyen kullanıcı bilgisi (en fazla 3 kişi saklanır)
+ *       properties:
+ *         userId:
+ *           type: string
+ *           format: objectId
+ *           example: "64fbbf9e12ab34cd56ef7890"
+ *         name:
+ *           type: string
+ *           example: "Ayşe Yılmaz"
+ *
+ *     Notification:
+ *       type: object
+ *       description: Kullanıcı bildirim dokümanı
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: objectId
+ *           example: "673c1db7f1d7fd2e8c1a1234"
+ *         type:
+ *           type: string
+ *           enum: [like, comment, badge, level_up]
+ *           description: Bildirim türü
+ *           example: "like"
+ *         relatedNoteId:
+ *           type: string
+ *           format: objectId
+ *           nullable: true
+ *           description: Notla ilgili bildirimlerde ilgili not ID'si
+ *           example: "64fbbf9e12ab34cd56ef7893"
+ *         lastComment:
+ *           type: string
+ *           nullable: true
+ *           description: Yorum bildirimlerinde son yorumun kısa özeti (100 karakter)
+ *           example: "Soru 4'ün çözümü şöyle olmalı..."
+ *         badge:
+ *           type: object
+ *           nullable: true
+ *           properties:
+ *             id:
+ *               type: string
+ *               example: "contributor"
+ *             name:
+ *               type: string
+ *               example: "Katkıcı"
+ *             icon:
+ *               type: string
+ *               example: "📚"
+ *         newLevel:
+ *           type: integer
+ *           nullable: true
+ *           minimum: 1
+ *           maximum: 6
+ *           description: Seviye bildirimi için ulaşılan yeni seviye
+ *           example: 3
+ *         count:
+ *           type: integer
+ *           description: Gruplanmış bildirimlerde toplam olay sayısı
+ *           example: 4
+ *         lastActors:
+ *           type: array
+ *           description: Bildirimi tetikleyen son kullanıcılar (en fazla 3 kişi)
+ *           items:
+ *             $ref: '#/components/schemas/NotificationActor'
+ *         isRead:
+ *           type: boolean
+ *           description: Bildirimin okunup okunmadığı
+ *           example: false
+ *         lastUpdated:
+ *           type: string
+ *           format: date-time
+ *           description: Bildirimin son güncellenme zamanı
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     NotificationListResponse:
+ *       type: object
+ *       properties:
+ *         notifications:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Notification'
+ *         pagination:
+ *           type: object
+ *           properties:
+ *             currentPage:
+ *               type: integer
+ *               example: 1
+ *             totalPages:
+ *               type: integer
+ *               example: 5
+ *             totalNotifications:
+ *               type: integer
+ *               example: 87
+ *             unreadCount:
+ *               type: integer
+ *               example: 12
+ *             hasNextPage:
+ *               type: boolean
+ *               example: true
+ *
+ *     LatestNoteSummary:
+ *       type: object
+ *       description: Keşfet sayfası için sadeleştirilmiş not bilgisi
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: objectId
+ *           example: "64fbbf9e12ab34cd56ef7894"
+ *         title:
+ *           type: string
+ *           example: "Veritabanı Finalleri 2023"
+ *         courseCode:
+ *           type: string
+ *           example: "COMP101E"
+ *         courseType:
+ *           type: string
+ *           enum: [split, single]
+ *           example: "split"
+ *         instructor:
+ *           type: string
+ *           example: "Dr. Mehmet Demir"
+ *         semester:
+ *           type: string
+ *           example: "2023/2024 Güz"
+ *         uploadDate:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-01-05T12:34:00.000Z"
+ *         driveLink:
+ *           type: string
+ *           format: uri
+ *           example: "https://drive.google.com/file/d/1AbCdEf"
+ *         uploadedBy:
+ *           type: string
+ *           description: Notu yükleyen kullanıcının adı
+ *           example: "Elif Çelik"
+ *
  *     Comment:
  *       type: object
  *       required: [noteId, userId, text]
@@ -443,6 +586,201 @@
 
 
 
+/**
+ * @openapi
+ * /admin/users:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Kullanıcı listesini getir
+ *     description: |
+ *       Admin kullanıcılar; sayfalama, arama ve filtreleme parametreleriyle kullanıcı listesini çekebilir.
+ *       - Admin hesaplar listeye dahil edilmez.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Sayfa başına kullanıcı sayısı
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: İsim veya e-posta içerisinde arama yapar
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive]
+ *         description: Kullanıcı aktif/pasif filtresi
+ *       - in: query
+ *         name: universityId
+ *         schema:
+ *           type: string
+ *         description: Belirli bir üniversiteye göre filtreleme
+ *     responses:
+ *       200:
+ *         description: Kullanıcı listesi döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       isActive:
+ *                         type: boolean
+ *                       role:
+ *                         type: string
+ *                       universityId:
+ *                         type: object
+ *                         nullable: true
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           slug:
+ *                             type: string
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     totalUsers:
+ *                       type: integer
+ *                     usersPerPage:
+ *                       type: integer
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /admin/users/{id}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Kullanıcı detaylarını getir
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Kullanıcı ID
+ *     responses:
+ *       200:
+ *         description: Kullanıcı detayları döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   description: Kullanıcı temel bilgileri
+ *                 recentNotes:
+ *                   type: array
+ *                   description: Kullanıcının son 10 aktif notu
+ *                   items:
+ *                     type: object
+ *                 recentComments:
+ *                   type: array
+ *                   description: Kullanıcının son 10 yorumu
+ *                   items:
+ *                     type: object
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /admin/users/{id}/status:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Kullanıcı aktif/pasif durumunu güncelle
+ *     description: Admin kullanıcılar, normal kullanıcıları aktifleştirebilir veya pasifleştirebilir. Admin hesaplar pasifleştirilemez.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Kullanıcı ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isActive
+ *             properties:
+ *               isActive:
+ *                 type: boolean
+ *                 description: Kullanıcının yeni durumu (true = aktif, false = pasif)
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: Kullanıcı durumu güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Kullanıcı pasifleştirildi"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     isActive:
+ *                       type: boolean
+ *       400:
+ *         description: Gönderilen isActive değeri geçersiz
+ *       403:
+ *         description: Yalnızca admin erişebilir veya admin kullanıcı banlanamaz
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
 
 
 
@@ -513,8 +851,198 @@
  *                   example: "Kayıt başarılı! Lütfen e-postanızı doğrulayın."
  *       400:
  *         description: "Eksik veya hatalı alan (ör: e-posta üniversite domainine ait değil, şifre kurallara uymuyor, kullanıcı zaten var)"
+ *       429:
+ *         description: "Çok fazla deneme yapıldı (limit: 1 saatte 3 kayıt denemesi)"
  *       500:
  *         description: "Sunucu hatası"
+ */
+
+/**
+ * @openapi
+ * /auth/myProfile:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Auth]
+ *     summary: Kendi profil bilgilerini getir
+ *     description: Giriş yapmış kullanıcının profil, oyunlaştırma ve istatistik bilgilerini döndürür.
+ *     responses:
+ *       200:
+ *         description: Profil bilgileri döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 profile:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     profilePic:
+ *                       type: string
+ *                       nullable: true
+ *                     department:
+ *                       type: string
+ *                       nullable: true
+ *                     aboutMe:
+ *                       type: string
+ *                       nullable: true
+ *                     socialLinks:
+ *                       type: object
+ *                       properties:
+ *                         linkedin:
+ *                           type: string
+ *                           nullable: true
+ *                         github:
+ *                           type: string
+ *                           nullable: true
+ *                     university:
+ *                       type: object
+ *                       nullable: true
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         slug:
+ *                           type: string
+ *                 gamification:
+ *                   type: object
+ *                   properties:
+ *                     score:
+ *                       type: integer
+ *                     monthlyScore:
+ *                       type: integer
+ *                     level:
+ *                       type: object
+ *                       properties:
+ *                         number:
+ *                           type: integer
+ *                         name:
+ *                           type: string
+ *                     badges:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           icon:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                 stats:
+ *                   type: object
+ *                   properties:
+ *                     totalNotes:
+ *                       type: integer
+ *                     totalLikes:
+ *                       type: integer
+ *                     totalComments:
+ *                       type: integer
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /auth/profile:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Auth]
+ *     summary: Profil bilgilerini güncelle
+ *     description: |
+ *       Kullanıcı isim, şifre, profil fotoğrafı, bölüm vb. alanlarını güncelleyebilir. En az bir alan gönderilmelidir.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: 2-50 karakter aralığında olmalı
+ *               password:
+ *                 type: string
+ *                 description: En az 6 karakter; en az 1 büyük harf, 1 küçük harf ve 1 rakam içermeli
+ *               profilePic:
+ *                 type: string
+ *                 description: Geçerli bir URL
+ *               aboutMe:
+ *                 type: string
+ *                 description: Maksimum 500 karakter
+ *               department:
+ *                 type: string
+ *                 description: Maksimum 100 karakter
+ *               socialLinks:
+ *                 type: object
+ *                 properties:
+ *                   linkedin:
+ *                     type: string
+ *                     description: Geçerli bir LinkedIn URL'i
+ *                   github:
+ *                     type: string
+ *                     description: Geçerli bir GitHub URL'i
+ *               notifications:
+ *                 type: boolean
+ *                 description: Bildirim alma tercihi
+ *     responses:
+ *       200:
+ *         description: Profil güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Profil başarıyla güncellendi"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     profilePic:
+ *                       type: string
+ *                       nullable: true
+ *                     aboutMe:
+ *                       type: string
+ *                       nullable: true
+ *                     department:
+ *                       type: string
+ *                       nullable: true
+ *                     socialLinks:
+ *                       type: object
+ *                       properties:
+ *                         linkedin:
+ *                           type: string
+ *                           nullable: true
+ *                         github:
+ *                           type: string
+ *                           nullable: true
+ *                     notifications:
+ *                       type: boolean
+ *       400:
+ *         description: Geçersiz veri veya hiçbir alan gönderilmedi
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
  */
 
 
@@ -555,8 +1083,50 @@
  *                 message:
  *                   type: string
  *                   example: "Token geçersiz veya süresi dolmuş."
+ *       429:
+ *         description: "Çok fazla istek (limit: 15 dakikada 3 şifre sıfırlama denemesi)"
  *       500:
  *         description: "Sunucu hatası"
+ */
+
+
+
+/**
+ * @openapi
+ * /auth/resend-verification-email:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Doğrulama e-postasını yeniden gönder
+ *     description: Daha önce kayıt olmuş ancak e-postasını doğrulamamış kullanıcıya yeni doğrulama bağlantısı gönderir.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: ogrenci@boun.edu.tr
+ *     responses:
+ *       200:
+ *         description: Doğrulama e-postası gönderildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Doğrulama e-postası tekrar gönderildi."
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       429:
+ *         description: "Çok fazla istek (limit: 5 dakikada 3 doğrulama maili)"
+ *       500:
+ *         description: Sunucu hatası
  */
 
 
@@ -594,6 +1164,217 @@
  *                 message:
  *                   type: string
  *                   example: Eğer hesap varsa sıfırlama maili gönderildi.
+ *       429:
+ *         description: "Çok fazla istek (limit: 15 dakikada 3 şifre sıfırlama talebi)"
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================= NOTIFICATION ROUTES =======================
+// Bu bölüm bildirim servisinin endpointlerini kapsar.
+/**
+ * @openapi
+ * tags:
+ *   - name: Notifications
+ *     description: Kullanıcı bildirimlerini listeleme, okuma ve silme işlemleri
+ */
+
+/**
+ * @openapi
+ * /notifications:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Bildirimleri listele
+ *     description: Kullanıcının kendi bildirimlerini sayfalı şekilde döndürür.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Sayfa başına sonuç sayısı
+ *     responses:
+ *       200:
+ *         description: Bildirimler listelendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotificationListResponse'
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /notifications/unread-count:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Okunmamış bildirim sayısını getir
+ *     responses:
+ *       200:
+ *         description: Okunmamış bildirim sayısı döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 unreadCount:
+ *                   type: integer
+ *                   example: 5
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /notifications/{id}/read:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Tek bildirimi okundu işaretle
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bildirim ID'si
+ *     responses:
+ *       200:
+ *         description: Bildirim okundu olarak güncellendi
+ *       404:
+ *         description: Bildirim bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /notifications/read-all:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Tüm bildirimleri okundu işaretle
+ *     responses:
+ *       200:
+ *         description: Okunmamış tüm bildirimler okundu işaretlendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Tüm bildirimler okundu işaretlendi"
+ *                 updatedCount:
+ *                   type: integer
+ *                   example: 12
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /notifications/{id}:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Tek bildirimi sil
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bildirim ID'si
+ *     responses:
+ *       200:
+ *         description: Bildirim silindi
+ *       404:
+ *         description: Bildirim bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /notifications/read:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Okunmuş bildirimleri sil
+ *     responses:
+ *       200:
+ *         description: Okunmuş bildirimler silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Okunmuş bildirimler silindi"
+ *                 deletedCount:
+ *                   type: integer
+ *                   example: 8
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /notifications/all:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Tüm bildirimleri sil
+ *     responses:
+ *       200:
+ *         description: Tüm bildirimler silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Tüm bildirimler silindi"
+ *                 deletedCount:
+ *                   type: integer
+ *                   example: 22
  *       500:
  *         description: Sunucu hatası
  */
@@ -654,18 +1435,28 @@
  *                     email:
  *                       type: string
  *                       example: "ali@boun.edu.tr"
- *                     universityId:
- *                       type: string
- *                       example: "64fbbf9e12ab34cd56ef7892"
  *                     role:
  *                       type: string
  *                       example: "user"
+ *                     university:
+ *                       type: object
+ *                       nullable: true
+ *                       description: Kullanıcının üniversitesi (admin ise null)
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "64fbbf9e12ab34cd56ef7892"
+ *                         slug:
+ *                           type: string
+ *                           example: "bogazici"
  *       400:
  *         description: "Eksik parametre veya kullanıcı bulunamadı"
  *       401:
  *         description: "Şifre yanlış"
  *       403:
  *         description: "Kullanıcı pasif veya doğrulanmamış"
+ *       429:
+ *         description: "Çok fazla başarısız giriş denemesi (limit: 15 dakikada 5 deneme)"
  *       500:
  *         description: "Sunucu hatası"
  */
@@ -1015,6 +1806,8 @@
  *         description: "Yalnızca admin erişebilir"
  *       404:
  *         description: "Not bulunamadı"
+ *       429:
+ *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
  *       500:
  *         description: "Sunucu hatası"
  */
@@ -1445,6 +2238,70 @@
  *         description: Sunucu hatası
  */
 
+/**
+ * @openapi
+ * /{slug}/notes/latest:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notes]
+ *     summary: Son eklenen notları getir (keşfet)
+ *     description: Belirtilen üniversitedeki en yeni notları sayfalı şekilde döner.
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Üniversite slug değeri
+ *         example: "itu"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Sayfa başına sonuç sayısı
+ *     responses:
+ *       200:
+ *         description: Son eklenen notlar listesi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/LatestNoteSummary'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 7
+ *                     totalNotes:
+ *                       type: integer
+ *                       example: 132
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *       403:
+ *         description: Kullanıcının üniversitesi slug ile uyuşmazsa erişim reddedilir
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
 
 
 
@@ -1829,6 +2686,114 @@
  *         description: Yetki yok
  *       404:
  *         description: Not bulunamadı
+ *
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notes]
+ *     summary: Notu güncelle
+ *     description: Sadece notu oluşturan kullanıcı kendi notunu güncelleyebilir. En az bir alan gönderilmelidir.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Güncellenecek not ID'si
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: 3-100 karakter arasında olmalıdır
+ *               description:
+ *                 type: string
+ *                 description: Not açıklaması (opsiyonel)
+ *               instructor:
+ *                 type: string
+ *                 description: Öğretim görevlisi bilgisi
+ *               year:
+ *                 type: string
+ *                 description: Yıl bilgisi (örn. 2023/2024)
+ *               semester:
+ *                 type: string
+ *                 description: Dönem bilgisi (örn. Güz)
+ *               driveLink:
+ *                 type: string
+ *                 description: "Geçerli bir Google Drive linki (https://drive.google.com/ ile başlamalı)"
+ *     responses:
+ *       200:
+ *         description: Not güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Not başarıyla güncellendi"
+ *                 note:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     instructor:
+ *                       type: string
+ *                     year:
+ *                       type: string
+ *                     driveLink:
+ *                       type: string
+ *       400:
+ *         description: Gönderilen veriler geçersiz veya hiçbir alan sağlanmadı
+ *       403:
+ *         description: Kullanıcının bu notu güncelleme yetkisi yok veya not pasif
+ *       404:
+ *         description: Not bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ *
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notes]
+ *     summary: Notu sil (pasifleştir)
+ *     description: Not sahibi notunu pasif hâle getirir. İşlem soft-delete olarak gerçekleşir.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Silinecek not ID'si
+ *     responses:
+ *       200:
+ *         description: Not pasifleştirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Not pasifleştirildi (admin panelde görünmeye devam edecek)"
+ *                 noteId:
+ *                   type: string
+ *       400:
+ *         description: Not zaten pasif durumda
+ *       403:
+ *         description: Kullanıcının bu notu silme yetkisi yok
+ *       404:
+ *         description: Not bulunamadı
+ *       500:
+ *         description: Sunucu hatası
  */
 
 /**
@@ -1887,6 +2852,12 @@
  *     responses:
  *       200:
  *         description: Beğeni eklendi
+ *       404:
+ *         description: Not bulunamadı
+ *       429:
+ *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
+ *       500:
+ *         description: İşlem başarısız
  */
 
 /**
@@ -1915,6 +2886,12 @@
  *     responses:
  *       200:
  *         description: Beğenmeme eklendi
+ *       404:
+ *         description: Not bulunamadı
+ *       429:
+ *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
+ *       500:
+ *         description: İşlem başarısız
  */
 
 /**
@@ -1961,6 +2938,8 @@
  *                   example: false
  *       404:
  *         description: Not bulunamadı
+ *       429:
+ *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
  *       500:
  *         description: İşlem başarısız
  */
@@ -2555,6 +3534,10 @@
  *         description: "Bu yoruma erişim yetkiniz yok"
  *       404:
  *         description: "Yorum bulunamadı"
+ *       429:
+ *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
+ *       500:
+ *         description: "İşlem başarısız"
  */
 
 /**
@@ -2603,6 +3586,10 @@
  *         description: "Bu yoruma erişim yetkiniz yok"
  *       404:
  *         description: "Yorum bulunamadı"
+ *       429:
+ *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
+ *       500:
+ *         description: "İşlem başarısız"
  */
 
 /**
@@ -2651,7 +3638,11 @@
  *         description: "Bu yoruma erişim yetkiniz yok"
  *       404:
  *         description: "Yorum bulunamadı"
- */
+ *       429:
+ *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
+ *       500:
+ *         description: "İşlem başarısız"
+*/
 
 
 

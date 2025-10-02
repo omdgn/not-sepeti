@@ -6,15 +6,26 @@ const {
   verifyEmail,
   resendVerificationEmail,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  updateProfile,
+  myProfile
 } = require("../controllers/auth.controller");
+const authMiddleware = require("../middleware/authMiddleware");
+const {
+  loginLimiter,
+  registerLimiter,
+  emailResendLimiter,
+  passwordResetLimiter
+} = require("../middleware/rateLimiter");
 
 
-router.post("/register", register);
-router.post("/login", login);
+router.post("/register", registerLimiter, register);
+router.post("/login", loginLimiter, login);
 router.get("/verify-email", verifyEmail); // query param ile token
-router.post("/resend-verification-email", resendVerificationEmail); // body: email
-router.post("/forgot-password", forgotPassword); // body: email
-router.post("/reset-password", resetPassword);   // body: token + newPassword
+router.post("/resend-verification-email", emailResendLimiter, resendVerificationEmail); // body: email
+router.post("/forgot-password", passwordResetLimiter, forgotPassword); // body: email
+router.post("/reset-password", passwordResetLimiter, resetPassword);   // body: token + newPassword
+router.get("/myProfile", authMiddleware, myProfile); // 🆕 Kendi profilini görüntüleme
+router.patch("/profile", authMiddleware, updateProfile); // 🆕 Profil güncelleme
 
 module.exports = router;

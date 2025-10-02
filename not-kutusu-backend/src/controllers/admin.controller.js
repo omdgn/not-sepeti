@@ -504,6 +504,150 @@ const adminSearchNotesWithSearchBar = async (req, res) => {
   }
 };
 
+// 👥 Kullanıcı Listesi (Admin)
+const getAllUsers = async (req, res) => {
+  try {
+    const notAdmin = checkAdmin(req, res);
+    if (notAdmin) return notAdmin;
+
+    const { page = 1, limit = 20, search, status, universityId } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    let filter = {};
+
+    // Arama filtresi (isim veya email)
+    if (search) {
+      const regex = new RegExp(search, "i");
+      filter.$or = [
+        { name: regex },
+        { email: regex }
+      ];
+    }
+
+    // Status filtresi (active/inactive)
+    if (status === "active") {
+      filter.isActive = true;
+    } else if (status === "inactive") {
+      filter.isActive = false;
+    }
+
+    // Üniversite filtresi
+    if (universityId) {
+      filter.universityId = universityId;
+    }
+
+    // Admin'leri listeden çıkar (opsiyonel)
+    filter.role = { $ne: "admin" };
+
+    const users = await User.find(filter)
+      .populate("universityId", "name slug")
+      .select("-password -verificationToken -verificationExpires -resetPasswordToken -resetPasswordExpires")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await User.countDocuments(filter);
+
+    res.status(200).json({
+      users,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+        totalUsers: total,
+        usersPerPage: parseInt(limit)
+      }
+    });
+  } catch (err) {
+    console.error("❌ [GET ALL USERS] Hata:", err.message);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+// 👤 Kullanıcı Detayları (Admin)
+const getUserById = async (req, res) => {
+  try {
+    const notAdmin = checkAdmin(req, res);
+    if (notAdmin) return notAdmin;
+
+    const { id } = req.params;
+
+    const user = await User.findById(id)
+      .populate("universityId", "name slug")
+      .select("-password -verificationToken -verificationExpires -resetPasswordToken -resetPasswordExpires")
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    // Kullanıcının notları
+    const notes = await Note.find({ createdBy: id, isActive: true })
+      .populate("courseId", "code name")
+      .select("title createdAt likes dislikes reports")
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    // Kullanıcının yorumları
+    const comments = await Comment.find({ userId: id })
+      .populate("noteId", "title")
+      .select("text createdAt likes dislikes reports")
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.status(200).json({
+      user,
+      recentNotes: notes,
+      recentComments: comments
+    });
+  } catch (err) {
+    console.error("❌ [GET USER BY ID] Hata:", err.message);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+// 🔄 Kullanıcı Durumunu Güncelle (Admin)
+const updateUserStatus = async (req, res) => {
+  try {
+    const notAdmin = checkAdmin(req, res);
+    if (notAdmin) return notAdmin;
+
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (typeof isActive !== "boolean") {
+      return res.status(400).json({ message: "isActive boolean değer olmalıdır" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    // Admin'in kendisini banlamaması için kontrol
+    if (user.role === "admin") {
+      return res.status(403).json({ message: "Admin kullanıcılar banlanamaz" });
+    }
+
+    user.isActive = isActive;
+    await user.save();
+
+    res.status(200).json({
+      message: isActive ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasifleştirildi",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isActive: user.isActive
+      }
+    });
+  } catch (err) {
+    console.error("❌ [UPDATE USER STATUS] Hata:", err.message);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+
 module.exports = {
   getReportedNotes,
   getInactiveNotes,
@@ -520,5 +664,8 @@ module.exports = {
   getAllSuggestions,
   updateSuggestionStatus,
   deleteSuggestionByAdmin,
-  adminSearchNotesWithSearchBar
+  adminSearchNotesWithSearchBar,
+  getAllUsers,
+  getUserById,
+  updateUserStatus
 };

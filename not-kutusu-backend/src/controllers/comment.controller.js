@@ -39,6 +39,18 @@ const addComment = async (req, res) => {
     // 🎮 Gamification: Yorum puanı
     await gamificationService.onCommentPost(userId);
 
+    // 📢 Bildirim gönder
+    const notificationService = require("../services/notificationService");
+    const io = req.app.get("io");
+    await notificationService.createCommentNotification(
+      userId,
+      req.user.name,
+      text.trim(),
+      noteId,
+      note.createdBy.toString(),
+      io
+    );
+
     res.status(201).json({ message: "Yorum eklendi", comment: newComment });
   } catch (err) {
     console.error("Yorum ekleme hatası:", err);

@@ -50,6 +50,7 @@ const departmentCodeRoutes = require("./routes/departmentCode.routes");
 const suggestionRoutes = require("./routes/suggestion.routes");
 const uploadRoutes = require("./routes/upload.routes");
 const scoreboardGameRoutes = require("./routes/scoreboardGame.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 // Use routes
 app.use("/api/auth", authRoutes);
@@ -63,6 +64,7 @@ app.use("/api", departmentCodeRoutes);
 app.use("/api", suggestionRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api/gamification", scoreboardGameRoutes);
+app.use("/api", notificationRoutes);
 
 // Swagger dark/light tema için gerekli inline script
 app.get("/swagger-theme-toggle.js", (req, res) => {

@@ -280,6 +280,7 @@ const likeNote = async (req, res) => {
     if (!note) return res.status(404).json({ message: "Not bulunamadı" });
 
     const existingReaction = note.reactions.find(r => r.userId.toString() === userId);
+    let shouldSendNotification = false;
 
     if (existingReaction) {
       if (existingReaction.type === "like") {
@@ -300,6 +301,7 @@ const likeNote = async (req, res) => {
 
         // 🎮 Gamification: Yeni like aldı
         await gamificationService.onLikeReceived(note.createdBy.toString());
+        shouldSendNotification = true;
       }
     } else {
       // 🔄 Hiç reaksiyonu yoksa direkt ekle
@@ -308,9 +310,24 @@ const likeNote = async (req, res) => {
 
       // 🎮 Gamification: Yeni like aldı
       await gamificationService.onLikeReceived(note.createdBy.toString());
+      shouldSendNotification = true;
     }
 
     await note.save();
+
+    // 📢 Bildirim gönder (sadece yeni like eklendiğinde)
+    if (shouldSendNotification) {
+      const notificationService = require("../services/notificationService");
+      const io = req.app.get("io");
+      await notificationService.createLikeNotification(
+        userId,
+        req.user.name,
+        noteId,
+        note.createdBy.toString(),
+        io
+      );
+    }
+
     res.status(200).json({ message: "Beğeni güncellendi", likes: note.likes });
   } catch (err) {
     console.error("Beğeni hatası:", err);
@@ -645,6 +662,191 @@ const searchNotesWithSearchBar = async (req, res) => {
   }
 };
 
+// 📄 Keşfet Sayfası - Son Eklenen Notlar
+const getLatestNotes = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+    const userUniversityId = req.user.universityId;
+
+    const university = await University.findOne({ slug });
+    if (!university) {
+      return res.status(404).json({ message: "Üniversite bulunamadı." });
+    }
+
+    // Güvenlik: Sadece kendi üniversitesinin notlarını görebilir
+    if (university._id.toString() !== userUniversityId.toString()) {
+      return res.status(403).json({ message: "Bu üniversiteye erişim izniniz yok." });
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const total = await Note.countDocuments({
+      universityId: university._id,
+      isActive: true
+    });
+
+    const notes = await Note.find({
+      universityId: university._id,
+      isActive: true
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate("courseId", "code type") // Sadece code ve type
+      .populate("createdBy", "name") // Sadece name
+      .select("title instructor year driveLink createdAt") // Sadece gerekli alanlar
+      .lean();
+
+    // Response formatı: Title, Course Code, Instructor, Dönem, Yüklenme Tarihi, DriveLink
+    const formattedNotes = notes.map(note => ({
+      id: note._id,
+      title: note.title,
+      courseCode: note.courseId?.code || "N/A",
+      courseType: note.courseId?.type || "N/A",
+      instructor: note.instructor || "Belirtilmemiş",
+      semester: note.year || "Belirtilmemiş",
+      uploadDate: note.createdAt,
+      driveLink: note.driveLink,
+      uploadedBy: note.createdBy?.name || "Anonim"
+    }));
+
+    res.json({
+      notes: formattedNotes,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+        totalNotes: total,
+        hasNextPage: skip + notes.length < total
+      }
+    });
+  } catch (err) {
+    console.error("Son eklenen notlar hatası:", err);
+    res.status(500).json({ message: "Notlar getirilemedi" });
+  }
+};
+
+// 📝 Notu Güncelle (Sadece Kendisi)
+const updateNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const userUniversityId = req.user.universityId;
+    const { title, description, instructor, year, semester, driveLink } = req.body;
+
+    // Validation: En az bir alan gönderilmiş mi?
+    if (!title && description === undefined && !instructor && !year && !semester && !driveLink) {
+      return res.status(400).json({ message: "Güncellenecek en az bir alan belirtmelisiniz" });
+    }
+
+    // Validation: Title uzunluk kontrolü
+    if (title && (title.trim().length < 3 || title.trim().length > 100)) {
+      return res.status(400).json({ message: "Başlık 3-100 karakter arasında olmalıdır" });
+    }
+
+    // Validation: DriveLink format kontrolü
+    if (driveLink && !driveLink.startsWith("https://drive.google.com/")) {
+      return res.status(400).json({ message: "Geçerli bir Google Drive linki giriniz" });
+    }
+
+    const note = await Note.findById(id);
+    if (!note) {
+      return res.status(404).json({ message: "Not bulunamadı" });
+    }
+
+    // 🔒 Güvenlik 1: Sadece kendi notunu güncelleyebilir
+    if (note.createdBy.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Bu notu düzenleme yetkiniz yok" });
+    }
+
+    // 🔒 Güvenlik 2: Üniversite kontrolü
+    if (note.universityId.toString() !== userUniversityId.toString()) {
+      return res.status(403).json({ message: "Erişim izniniz yok" });
+    }
+
+    // 🔒 Güvenlik 3: Pasif notlar güncellenemez
+    if (!note.isActive) {
+      return res.status(403).json({ message: "Pasif notlar güncellenemez" });
+    }
+
+    // Güncellenebilir alanlar (sanitize edilmiş)
+    if (title) note.title = title.trim();
+    if (description !== undefined) note.description = description.trim();
+    if (instructor !== undefined) note.instructor = instructor.trim();
+    if (driveLink) note.driveLink = driveLink.trim();
+
+    // Dönem formatı
+    if (year && semester) {
+      note.year = `${year.trim()} - ${semester.trim()}`;
+    } else if (year) {
+      note.year = year.trim();
+    }
+
+    await note.save();
+
+    res.json({
+      message: "Not başarıyla güncellendi",
+      note: {
+        _id: note._id,
+        title: note.title,
+        description: note.description,
+        instructor: note.instructor,
+        year: note.year,
+        driveLink: note.driveLink
+      }
+    });
+  } catch (err) {
+    console.error("Not güncelleme hatası:", err);
+    res.status(500).json({ message: "Not güncellenemedi" });
+  }
+};
+
+// 🗑️ Notu Sil (Soft Delete - Pasifleştir)
+const deleteNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+    const userUniversityId = req.user.universityId;
+
+    const note = await Note.findById(id);
+    if (!note) {
+      return res.status(404).json({ message: "Not bulunamadı" });
+    }
+
+    // 🔒 Güvenlik 1: Sadece kendi notunu silebilir
+    if (note.createdBy.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Bu notu silme yetkiniz yok" });
+    }
+
+    // 🔒 Güvenlik 2: Üniversite kontrolü
+    if (note.universityId.toString() !== userUniversityId.toString()) {
+      return res.status(403).json({ message: "Erişim izniniz yok" });
+    }
+
+    // 🔒 Güvenlik 3: Zaten pasifse tekrar silme
+    if (!note.isActive) {
+      return res.status(400).json({ message: "Bu not zaten pasif durumda" });
+    }
+
+    // Soft delete
+    note.isActive = false;
+    await note.save();
+
+    // 🎮 Gamification: Not silme puanı
+    await gamificationService.onNoteDelete(userId);
+
+    // Course noteCount azalt
+    await Course.findByIdAndUpdate(note.courseId, { $inc: { noteCount: -1 } });
+
+    res.json({
+      message: "Not pasifleştirildi (admin panelde görünmeye devam edecek)",
+      noteId: note._id
+    });
+  } catch (err) {
+    console.error("Not silme hatası:", err);
+    res.status(500).json({ message: "Not silinemedi" });
+  }
+};
+
 
 
 module.exports = {
@@ -657,5 +859,8 @@ module.exports = {
   getTopContributors,
   getTopNotes,
   searchNotes,
-  searchNotesWithSearchBar
+  searchNotesWithSearchBar,
+  getLatestNotes,
+  updateNote,
+  deleteNote
 };

@@ -15,6 +15,8 @@ const addPoints = async (userId, points, reason = "") => {
       return null;
     }
 
+    const oldLevel = user.level;
+
     // Puanları ekle
     user.score = Math.max(0, user.score + points);
     user.monthlyScore = Math.max(0, user.monthlyScore + points);
@@ -24,6 +26,13 @@ const addPoints = async (userId, points, reason = "") => {
 
     await user.save();
     console.log(`✅ [GAMIFICATION] ${user.name} +${points} puan (${reason})`);
+
+    // 📢 Seviye atladıysa bildirim gönder
+    if (user.level > oldLevel) {
+      const notificationService = require("./notificationService");
+      const levelName = LEVELS[user.level].name;
+      await notificationService.createLevelUpNotification(userId, user.level, levelName, global.io);
+    }
 
     return user;
   } catch (error) {
@@ -122,6 +131,14 @@ const checkAndAwardBadges = async (userId) => {
 
     if (awardedBadges.length > 0) {
       await user.save();
+
+      // 📢 Her yeni rozet için bildirim gönder
+      const notificationService = require("./notificationService");
+      // io'yu almak için global app instance gerekebilir, şimdilik null
+      for (const badgeId of awardedBadges) {
+        const badge = BADGES[badgeId];
+        await notificationService.createBadgeNotification(userId, badge, global.io);
+      }
     }
 
     return awardedBadges;

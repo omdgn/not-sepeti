@@ -17,7 +17,10 @@ const {
   getAllSuggestions,
   updateSuggestionStatus,
   deleteSuggestionByAdmin,
-  adminSearchNotesWithSearchBar
+  adminSearchNotesWithSearchBar,
+  getAllUsers,
+  getUserById,
+  updateUserStatus
 } = require("../controllers/admin.controller");
 
 const { createCourse } = require("../controllers/course.controller");
@@ -50,8 +53,11 @@ router.delete("/notes/:id", deleteNoteByAdmin);
 router.delete("/comments/:id", deleteCommentByAdmin);
 
 // Kullanıcı yönetimi
-router.patch("/users/:id/ban", banUser);
-router.patch("/users/:id/unban", unbanUser);
+router.get("/users", getAllUsers); // 🆕 Kullanıcı listesi
+router.get("/users/:id", getUserById); // 🆕 Kullanıcı detayları
+router.patch("/users/:id/status", updateUserStatus); // 🆕 Kullanıcı durumu güncelle
+router.patch("/users/:id/ban", banUser); // Backward compatibility
+router.patch("/users/:id/unban", unbanUser); // Backward compatibility
 
 // Öneri yönetimi
 router.get("/suggestions", getAllSuggestions);

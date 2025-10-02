@@ -280,4 +280,189 @@ const resetPassword = async (req, res) => {
 };
 
 
-module.exports = { register, verifyEmail, resendVerificationEmail, login, forgotPassword, resetPassword };
+// 🟣 Profil güncelleme
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { name, password, profilePic, aboutMe, department, socialLinks, notifications } = req.body;
+
+    // En az bir alan gönderilmeli
+    if (!name && !password && !profilePic && aboutMe === undefined && !department && !socialLinks && notifications === undefined) {
+      return res.status(400).json({ message: "Güncellenecek en az bir alan belirtmelisiniz" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    // İsim validasyonu
+    if (name !== undefined) {
+      if (!name || name.trim().length < 2 || name.trim().length > 50) {
+        return res.status(400).json({ message: "İsim 2-50 karakter arasında olmalıdır" });
+      }
+      // İsim benzersizlik kontrolü
+      const existingUser = await User.findOne({ name: name.trim() });
+      if (existingUser && existingUser._id.toString() !== userId.toString()) {
+        return res.status(400).json({ message: "Bu isim başka bir kullanıcı tarafından kullanılıyor" });
+      }
+      user.name = name.trim();
+    }
+
+    // Şifre validasyonu
+    if (password !== undefined) {
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({
+          message: "Şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir"
+        });
+      }
+      user.password = await bcrypt.hash(password, 10);
+    }
+
+    // Profil resmi validasyonu
+    if (profilePic !== undefined) {
+      if (profilePic && (!profilePic.startsWith("http://") && !profilePic.startsWith("https://"))) {
+        return res.status(400).json({ message: "Geçerli bir URL giriniz" });
+      }
+      user.profilePic = profilePic.trim();
+    }
+
+    // Hakkımda validasyonu
+    if (aboutMe !== undefined) {
+      if (aboutMe && aboutMe.trim().length > 500) {
+        return res.status(400).json({ message: "Hakkımda 500 karakterden fazla olamaz" });
+      }
+      user.aboutMe = aboutMe.trim();
+    }
+
+    // Bölüm validasyonu
+    if (department !== undefined) {
+      if (department && department.trim().length > 100) {
+        return res.status(400).json({ message: "Bölüm 100 karakterden fazla olamaz" });
+      }
+      user.department = department.trim();
+    }
+
+    // Sosyal linkler validasyonu
+    if (socialLinks !== undefined) {
+      if (typeof socialLinks !== "object" || Array.isArray(socialLinks)) {
+        return res.status(400).json({ message: "Geçersiz sosyal link formatı" });
+      }
+
+      if (socialLinks.linkedin !== undefined) {
+        if (typeof socialLinks.linkedin !== "string") {
+          return res.status(400).json({ message: "LinkedIn URL string olmalıdır" });
+        }
+        if (socialLinks.linkedin && (!socialLinks.linkedin.startsWith("http://") && !socialLinks.linkedin.startsWith("https://"))) {
+          return res.status(400).json({ message: "Geçerli bir LinkedIn URL'i giriniz" });
+        }
+        user.socialLinks.linkedin = socialLinks.linkedin.trim();
+      }
+      if (socialLinks.github !== undefined) {
+        if (typeof socialLinks.github !== "string") {
+          return res.status(400).json({ message: "GitHub URL string olmalıdır" });
+        }
+        if (socialLinks.github && (!socialLinks.github.startsWith("http://") && !socialLinks.github.startsWith("https://"))) {
+          return res.status(400).json({ message: "Geçerli bir GitHub URL'i giriniz" });
+        }
+        user.socialLinks.github = socialLinks.github.trim();
+      }
+    }
+
+    // Bildirim tercihi
+    if (notifications !== undefined) {
+      if (typeof notifications !== "boolean") {
+        return res.status(400).json({ message: "Bildirim tercihi true veya false olmalıdır" });
+      }
+      user.notifications = notifications;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profil başarıyla güncellendi",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        profilePic: user.profilePic,
+        aboutMe: user.aboutMe,
+        department: user.department,
+        socialLinks: user.socialLinks,
+        notifications: user.notifications
+      }
+    });
+  } catch (err) {
+    console.error("❌ [UPDATE PROFILE] Hata:", err.message);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+
+// 🟢 Kullanıcının kendi profilini görüntüleme
+const myProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId)
+      .select("-password -verificationToken -verificationExpires -resetPasswordToken -resetPasswordExpires")
+      .populate("universityId", "name slug")
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    // Rozet bilgilerini al
+    const { BADGES, LEVELS } = require("../config/badgesConfig");
+    const badgeDetails = user.badges.map(badgeId => {
+      const badgeKey = Object.keys(BADGES).find(key => BADGES[key].id === badgeId);
+      return badgeKey ? {
+        id: BADGES[badgeKey].id,
+        name: BADGES[badgeKey].name,
+        icon: BADGES[badgeKey].icon,
+        description: BADGES[badgeKey].description
+      } : null;
+    }).filter(Boolean);
+
+    // Seviye bilgisini al
+    const levelInfo = LEVELS[user.level] || { name: "Acemi" };
+
+    res.status(200).json({
+      profile: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        profilePic: user.profilePic,
+        department: user.department,
+        aboutMe: user.aboutMe,
+        socialLinks: user.socialLinks,
+        university: user.universityId ? {
+          id: user.universityId._id,
+          name: user.universityId.name,
+          slug: user.universityId.slug
+        } : null
+      },
+      gamification: {
+        score: user.score,
+        monthlyScore: user.monthlyScore,
+        level: {
+          number: user.level,
+          name: levelInfo.name
+        },
+        badges: badgeDetails
+      },
+      stats: {
+        totalNotes: user.stats.notes,
+        totalLikes: user.stats.likesReceived,
+        totalComments: user.stats.comments
+      }
+    });
+  } catch (err) {
+    console.error("❌ [MY PROFILE] Hata:", err.message);
+    res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+
+module.exports = { register, verifyEmail, resendVerificationEmail, login, forgotPassword, resetPassword, updateProfile, myProfile };
