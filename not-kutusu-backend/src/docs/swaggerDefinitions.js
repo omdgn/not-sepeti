@@ -417,6 +417,163 @@
  *           description: Notu yükleyen kullanıcının adı
  *           example: "Elif Çelik"
  *
+ *     TopContributorSummary:
+ *       type: object
+ *       description: Belirli bir üniversitede en çok katkı sağlayan kullanıcı bilgisi
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: "Ali Yılmaz"
+ *         profilePic:
+ *           type: string
+ *           nullable: true
+ *           example: "https://example.com/avatar.png"
+ *         score:
+ *           type: integer
+ *           description: Kullanıcının mevcut toplam puanı
+ *           example: 540
+ *         noteCount:
+ *           type: integer
+ *           description: Yüklediği toplam not sayısı
+ *           example: 18
+ *         totalLikes:
+ *           type: integer
+ *           description: Notlarının aldığı toplam beğeni
+ *           example: 125
+ *         totalDislikes:
+ *           type: integer
+ *           description: Notlarının aldığı toplam beğenmeme
+ *           example: 4
+ *         totalReports:
+ *           type: integer
+ *           description: Notlarının aldığı toplam rapor
+ *           example: 1
+ *
+ *     PopularNoteSummary:
+ *       type: object
+ *       description: En çok beğenilen notlar listesi için özet veri
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: objectId
+ *           example: "64fbbf9e12ab34cd56ef7894"
+ *         title:
+ *           type: string
+ *           example: "Differential Equations Cheat Sheet"
+ *         likes:
+ *           type: integer
+ *           example: 87
+ *         dislikes:
+ *           type: integer
+ *           example: 2
+ *         reports:
+ *           type: integer
+ *           example: 0
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-02-11T10:05:00.000Z"
+ *         course:
+ *           type: object
+ *           nullable: true
+ *           properties:
+ *             id:
+ *               type: string
+ *               format: objectId
+ *               example: "64fbbf9e12ab34cd56ef7893"
+ *             code:
+ *               type: string
+ *               example: "MATH202"
+ *             name:
+ *               type: string
+ *               nullable: true
+ *               example: "Calculus II"
+ *         uploader:
+ *           type: object
+ *           nullable: true
+ *           properties:
+ *             id:
+ *               type: string
+ *               format: objectId
+ *               example: "64fbbf9e12ab34cd56ef7890"
+ *             name:
+ *               type: string
+ *               example: "Elif Çelik"
+ *             score:
+ *               type: integer
+ *               example: 420
+ *
+ *     NoteSearchResult:
+ *       type: object
+ *       description: Not arama sorgularında dönen detaylı not bilgisi
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: objectId
+ *           example: "64fbbf9e12ab34cd56ef7894"
+ *         title:
+ *           type: string
+ *           example: "Database Final Notes"
+ *         description:
+ *           type: string
+ *           nullable: true
+ *           example: "Sınava girmeden önce mutlaka okuyun"
+ *         instructor:
+ *           type: string
+ *           nullable: true
+ *           example: "Dr. Ayşe Demir"
+ *         year:
+ *           type: string
+ *           nullable: true
+ *           example: "2023 - Güz"
+ *         likes:
+ *           type: integer
+ *           example: 32
+ *         dislikes:
+ *           type: integer
+ *           example: 1
+ *         reports:
+ *           type: integer
+ *           example: 0
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-02-01T09:30:00.000Z"
+ *         course:
+ *           type: object
+ *           nullable: true
+ *           properties:
+ *             id:
+ *               type: string
+ *               format: objectId
+ *               example: "64fbbf9e12ab34cd56ef7893"
+ *             code:
+ *               type: string
+ *               example: "COMP202"
+ *             name:
+ *               type: string
+ *               nullable: true
+ *               example: "Data Structures"
+ *         createdBy:
+ *           type: object
+ *           nullable: true
+ *           properties:
+ *             id:
+ *               type: string
+ *               format: objectId
+ *               example: "64fbbf9e12ab34cd56ef7890"
+ *             name:
+ *               type: string
+ *               example: "Ali Yılmaz"
+ *
+ *     NoteSearchResponse:
+ *       type: object
+ *       properties:
+ *         notes:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/NoteSearchResult'
+ *
  *     Comment:
  *       type: object
  *       required: [noteId, userId, text]
@@ -810,6 +967,8 @@
  *     description: |
  *       Yeni bir kullanıcı kaydı oluşturur. 
  *       - Kullanıcının e-posta adresi, seçilen üniversitenin domainlerinden biriyle eşleşmelidir.
+ *       - Kullanıcı rolü `user` ise `universityId` ve `slug` alanları zorunludur.
+ *       - Opsiyonel `role` alanı `admin` gönderilirse üniversite eşlemesi yapılmaz ve hesap doğrulanmış olarak açılır.
  *       - Şifre aşağıdaki kuralları sağlamalıdır:
  *         * Minimum 6 karakter
  *         * En az 1 büyük harf
@@ -836,8 +995,17 @@
  *                 example: "YeniSifre123"
  *               universityId:
  *                 type: string
- *                 description: "Üniversite ID (zorunlu)"
+ *                 description: "Üniversite ID (kullanıcı rolü 'user' için zorunlu)"
  *                 example: "64fbbf9e12ab34cd56ef7892"
+ *               slug:
+ *                 type: string
+ *                 description: "Üniversite slug değeri (kullanıcı rolü 'user' için zorunlu)"
+ *                 example: "bogazici"
+ *               role:
+ *                 type: string
+ *                 enum: [user, admin]
+ *                 description: "Varsayılan 'user'. Admin hesabı oluşturmak için 'admin' gönderilebilir."
+ *                 example: "user"
  *     responses:
  *       201:
  *         description: "Kayıt başarılı"
@@ -850,7 +1018,7 @@
  *                   type: string
  *                   example: "Kayıt başarılı! Lütfen e-postanızı doğrulayın."
  *       400:
- *         description: "Eksik veya hatalı alan (ör: e-posta üniversite domainine ait değil, şifre kurallara uymuyor, kullanıcı zaten var)"
+ *         description: "Eksik veya hatalı alan (ör: üniversite ID/slug hatalı, e-posta domaini eşleşmiyor, şifre kurallara uymuyor, kullanıcı zaten var)"
  *       429:
  *         description: "Çok fazla deneme yapıldı (limit: 1 saatte 3 kayıt denemesi)"
  *       500:
@@ -866,6 +1034,13 @@
  *     tags: [Auth]
  *     summary: Kendi profil bilgilerini getir
  *     description: Giriş yapmış kullanıcının profil, oyunlaştırma ve istatistik bilgilerini döndürür.
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Bearer {JWT} formatında erişim tokeni"
  *     responses:
  *       200:
  *         description: Profil bilgileri döndürüldü
@@ -947,6 +1122,16 @@
  *                       type: integer
  *                     totalComments:
  *                       type: integer
+ *       401:
+ *         description: JWT yok veya geçersiz
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Kimlik doğrulama gerekli"
  *       404:
  *         description: Kullanıcı bulunamadı
  *       500:
@@ -1043,6 +1228,59 @@
  *         description: Kullanıcı bulunamadı
  *       500:
  *         description: Sunucu hatası
+ */
+
+
+
+/**
+ * @openapi
+ * /auth/profileResetPassword:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Auth]
+ *     summary: Profil şifresini güncelle
+ *     description: |
+ *       Giriş yapmış kullanıcı mevcut şifresini doğruladıktan sonra yeni şifre belirler.
+ *       - Yeni şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir.
+ *       - Yeni şifre mevcut şifreyle aynı olamaz.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: "Mevcut şifreniz"
+ *                 example: "EskiSifre123"
+ *               newPassword:
+ *                 type: string
+ *                 description: "Yeni şifre (güçlü şifre kurallarına uygun olmalı)"
+ *                 example: "YeniSifre123"
+ *     responses:
+ *       200:
+ *         description: Şifre güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Şifre başarıyla güncellendi"
+ *       400:
+ *         description: "Geçersiz veri, eksik alan veya yeni şifre kurallara uymuyor"
+ *       401:
+ *         description: "Mevcut şifre yanlış"
+ *       404:
+ *         description: "Kullanıcı bulunamadı"
+ *       500:
+ *         description: "Sunucu hatası"
  */
 
 
@@ -2952,15 +3190,44 @@
  *       - bearerAuth: []
  *     tags: [Notes]
  *     summary: En çok katkı sağlayan kullanıcıları getir
+ *     description: Belirtilen üniversite slug'ı için en fazla not yükleyen kullanıcıları döner.
  *     parameters:
  *       - in: path
  *         name: slug
  *         required: true
  *         schema:
  *           type: string
+ *         description: Üniversite slug değeri
+ *         example: "bogazici"
  *     responses:
  *       200:
  *         description: Liste başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/TopContributorSummary'
+ *       404:
+ *         description: Üniversite bulunamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Üniversite bulunamadı."
+ *       500:
+ *         description: Sunucu hatası
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Sunucu hatası"
  */
 
 /**
@@ -2971,15 +3238,54 @@
  *       - bearerAuth: []
  *     tags: [Notes]
  *     summary: En popüler notları getir
+ *     description: Belirtilen üniversitedeki en çok beğeni almış aktif notları döner.
  *     parameters:
  *       - in: path
  *         name: slug
  *         required: true
  *         schema:
  *           type: string
+ *         description: Üniversite slug değeri
+ *         example: "itu"
  *     responses:
  *       200:
  *         description: Liste başarıyla getirildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/PopularNoteSummary'
+ *       403:
+ *         description: Kullanıcının bu üniversiteye erişim izni yok
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bu üniversiteye erişim izniniz yok."
+ *       404:
+ *         description: Üniversite bulunamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Üniversite bulunamadı."
+ *       500:
+ *         description: Sunucu hatası
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Popüler notlar getirilemedi"
  */
 
 /**
@@ -2990,6 +3296,7 @@
  *       - bearerAuth: []
  *     tags: [Notes]
  *     summary: Not arama işlemi
+ *     description: Belirtilen üniversitede başlık, açıklama, öğretim üyesi, dönem, ders veya yükleyen kişi bilgilerine göre not araması yapar.
  *     parameters:
  *       - in: path
  *         name: slug
@@ -2998,12 +3305,48 @@
  *           type: string
  *       - in: query
  *         name: q
+ *         required: true
  *         schema:
  *           type: string
- *         description: Arama kelimesi
+ *         description: Arama kelimesi (en az 1 karakter)
+ *         example: "database"
  *     responses:
  *       200:
  *         description: Arama sonuçları
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NoteSearchResponse'
+ *       400:
+ *         description: Arama terimi gerekli veya geçersiz
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Arama terimi gerekli."
+ *       403:
+ *         description: Kullanıcının bu üniversiteye erişim izni yok
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bu üniversiteye erişim izniniz yok."
+ *       500:
+ *         description: Sunucu hatası
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Sunucu hatası"
  */
 
 /**

@@ -7,8 +7,8 @@ const { generateToken } = require("../utils/jwt");
 const { sendVerificationEmail } = require("../utils/email");
 const jwt = require("jsonwebtoken");
 
-// Şifre validasyon regex'i
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+// Şifre validasyon regex'i (Türkçe karakterler dahil)
+const passwordRegex = /^(?=.*[a-zçğıöşü])(?=.*[A-ZÇĞİÖŞÜ])(?=.*\d).{6,}$/;
 
 // 🟢 Kayıt işlemi
 const register = async (req, res) => {
@@ -284,10 +284,10 @@ const resetPassword = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { name, password, profilePic, aboutMe, department, socialLinks, notifications } = req.body;
+    const { name, profilePic, aboutMe, department, socialLinks, notifications } = req.body;
 
     // En az bir alan gönderilmeli
-    if (!name && !password && !profilePic && aboutMe === undefined && !department && !socialLinks && notifications === undefined) {
+    if (!name && !profilePic && aboutMe === undefined && !department && !socialLinks && notifications === undefined) {
       return res.status(400).json({ message: "Güncellenecek en az bir alan belirtmelisiniz" });
     }
 
@@ -301,22 +301,37 @@ const updateProfile = async (req, res) => {
       if (!name || name.trim().length < 2 || name.trim().length > 50) {
         return res.status(400).json({ message: "İsim 2-50 karakter arasında olmalıdır" });
       }
-      // İsim benzersizlik kontrolü
-      const existingUser = await User.findOne({ name: name.trim() });
-      if (existingUser && existingUser._id.toString() !== userId.toString()) {
-        return res.status(400).json({ message: "Bu isim başka bir kullanıcı tarafından kullanılıyor" });
-      }
-      user.name = name.trim();
-    }
 
-    // Şifre validasyonu
-    if (password !== undefined) {
-      if (!passwordRegex.test(password)) {
-        return res.status(400).json({
-          message: "Şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir"
-        });
+      // Türkçe karaktersiz normalize edilmiş isim oluştur
+      const normalizeForComparison = (text) => {
+        return text
+          .toLowerCase()
+          .replace(/ı/g, 'i')
+          .replace(/ğ/g, 'g')
+          .replace(/ü/g, 'u')
+          .replace(/ş/g, 's')
+          .replace(/ö/g, 'o')
+          .replace(/ç/g, 'c')
+          .replace(/İ/g, 'i')
+          .trim();
+      };
+
+      // İsim benzersizlik kontrolü (Türkçe karakterden bağımsız)
+      const normalizedInputName = normalizeForComparison(name);
+      const allUsers = await User.find({}).select('name _id');
+
+      for (const existingUser of allUsers) {
+        if (existingUser._id.toString() === userId.toString()) continue;
+
+        const normalizedExistingName = normalizeForComparison(existingUser.name);
+        if (normalizedExistingName === normalizedInputName) {
+          return res.status(400).json({
+            message: "Bu isim başka bir kullanıcı tarafından kullanılıyor (Türkçe karakter farklılıkları göz ardı edilir)"
+          });
+        }
       }
-      user.password = await bcrypt.hash(password, 10);
+
+      user.name = name.trim();
     }
 
     // Profil resmi validasyonu
@@ -399,6 +414,52 @@ const updateProfile = async (req, res) => {
 };
 
 
+// 🔑 Profil şifre güncelleme (giriş yapmış kullanıcı için)
+const profileResetPassword = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Mevcut şifre ve yeni şifre zorunludur" });
+    }
+
+    // Yeni şifre validasyonu
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        message: "Şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir"
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+    }
+
+    // Mevcut şifre kontrolü
+    const isPasswordMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: "Mevcut şifre yanlış" });
+    }
+
+    // Yeni şifre eski şifreyle aynı olamaz
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: "Yeni şifre eski şifrenizle aynı olamaz" });
+    }
+
+    // Şifreyi güncelle
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    return res.status(200).json({ message: "Şifre başarıyla güncellendi" });
+  } catch (err) {
+    console.error("❌ [PROFILE RESET PASSWORD] Hata:", err.message);
+    return res.status(500).json({ message: "Sunucu hatası" });
+  }
+};
+
+
 // 🟢 Kullanıcının kendi profilini görüntüleme
 const myProfile = async (req, res) => {
   try {
@@ -465,4 +526,4 @@ const myProfile = async (req, res) => {
 };
 
 
-module.exports = { register, verifyEmail, resendVerificationEmail, login, forgotPassword, resetPassword, updateProfile, myProfile };
+module.exports = { register, verifyEmail, resendVerificationEmail, login, forgotPassword, resetPassword, updateProfile, profileResetPassword, myProfile };

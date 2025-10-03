@@ -601,7 +601,20 @@ const searchNotesWithSearchBar = async (req, res) => {
       return res.status(403).json({ message: "Bu üniversiteye erişim izniniz yok." });
     }
 
-    const regex = new RegExp(q, "i");
+    // Türkçe karakter normalizasyonu için yardımcı fonksiyon
+    const normalizeTurkish = (text) => {
+      return text
+        .replace(/ı/gi, '[iıİI]')
+        .replace(/i/gi, '[iıİI]')
+        .replace(/ş/gi, '[şsŞS]')
+        .replace(/ğ/gi, '[ğgĞG]')
+        .replace(/ü/gi, '[üuÜU]')
+        .replace(/ö/gi, '[öoÖO]')
+        .replace(/ç/gi, '[çcÇC]');
+    };
+
+    const normalizedQuery = normalizeTurkish(q);
+    const regex = new RegExp(normalizedQuery, "i");
 
     // Course code eşleşmeleri
     const matchedCourses = await Course.find({
@@ -623,6 +636,7 @@ const searchNotesWithSearchBar = async (req, res) => {
       $or: [
         { title: regex },
         { description: regex },
+        { instructor: regex },
         { courseId: { $in: matchedCourseIds } }
       ]
     });
@@ -634,6 +648,7 @@ const searchNotesWithSearchBar = async (req, res) => {
       $or: [
         { title: regex },
         { description: regex },
+        { instructor: regex },
         { courseId: { $in: matchedCourseIds } }
       ]
     })

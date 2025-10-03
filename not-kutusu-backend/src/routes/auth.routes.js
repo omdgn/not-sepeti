@@ -8,6 +8,7 @@ const {
   forgotPassword,
   resetPassword,
   updateProfile,
+  profileResetPassword,
   myProfile
 } = require("../controllers/auth.controller");
 const authMiddleware = require("../middleware/authMiddleware");
@@ -15,7 +16,8 @@ const {
   loginLimiter,
   registerLimiter,
   emailResendLimiter,
-  passwordResetLimiter
+  passwordResetLimiter,
+  profilePasswordChangeLimiter
 } = require("../middleware/rateLimiter");
 
 
@@ -27,5 +29,6 @@ router.post("/forgot-password", passwordResetLimiter, forgotPassword); // body: 
 router.post("/reset-password", passwordResetLimiter, resetPassword);   // body: token + newPassword
 router.get("/myProfile", authMiddleware, myProfile); // 🆕 Kendi profilini görüntüleme
 router.patch("/profile", authMiddleware, updateProfile); // 🆕 Profil güncelleme
+router.patch("/profileResetPassword", authMiddleware, profilePasswordChangeLimiter, profileResetPassword); // 🔑 Profil şifre güncelleme
 
 module.exports = router;

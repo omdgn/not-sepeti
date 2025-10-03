@@ -117,8 +117,8 @@ const updateUserProfile = async (req, res) => {
         return res.status(403).json({ message: "Eski şifre yanlış." });
       }
 
-      // Yeni şifre kuralları
-      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+      // Yeni şifre kuralları (Türkçe karakterler dahil)
+      const passwordRegex = /^(?=.*[a-zçğıöşü])(?=.*[A-ZÇĞİÖŞÜ])(?=.*\d).{6,}$/;
       if (!passwordRegex.test(newPassword)) {
         return res.status(400).json({
           message: "Yeni şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir."

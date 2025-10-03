@@ -46,6 +46,15 @@ const passwordResetLimiter = rateLimit({
   legacyHeaders: false
 });
 
+// 🔐 Profile password change limiter
+const profilePasswordChangeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 dakika
+  max: 3, // 3 deneme
+  message: { message: "Çok fazla şifre değiştirme isteği. Lütfen 15 dakika bekleyin." },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // 🔐 General API limiter - Genel koruma
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 dakika
@@ -64,6 +73,7 @@ module.exports = {
   interactionLimiter,
   emailResendLimiter,
   passwordResetLimiter,
+  profilePasswordChangeLimiter,
   generalLimiter,
   authLimiter // backward compatibility
 };
