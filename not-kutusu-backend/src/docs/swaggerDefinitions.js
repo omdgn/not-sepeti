@@ -22,7 +22,7 @@
  *           example: "64fbbf9e12ab34cd56ef7890"
  *         name:
  *           type: string
- *           description: "Kullanıcı adı (zorunlu)"
+ *           description: "Kullanıcı adı (zorunlu, benzersiz olması gerekmez)"
  *           example: "Ali Yılmaz"
  *         email:
  *           type: string
@@ -983,7 +983,7 @@
  *             properties:
  *               name:
  *                 type: string
- *                 description: "Kullanıcı adı (zorunlu)"
+ *                 description: "Kullanıcı adı (zorunlu, benzersiz olması gerekmez)"
  *                 example: "Ali Yılmaz"
  *               email:
  *                 type: string
@@ -1157,7 +1157,7 @@
  *             properties:
  *               name:
  *                 type: string
- *                 description: 2-50 karakter aralığında olmalı
+ *                 description: 2-50 karakter aralığında olmalı; aynı isimler kullanılabilir
  *               password:
  *                 type: string
  *                 description: En az 6 karakter; en az 1 büyük harf, 1 küçük harf ve 1 rakam içermeli

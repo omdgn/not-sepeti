@@ -62,18 +62,23 @@ const uploadNote = async (req, res) => {
       semester
     } = req.body;
 
-    // 1. URL geçerli mi?
+    // 1. Description karakter limiti kontrolü
+    if (description && description.length > 750) {
+      return res.status(400).json({ message: "Açıklama 750 karakterden uzun olamaz" });
+    }
+
+    // 2. URL geçerli mi?
     if (!isValidURL(driveLink)) {
       return res.status(400).json({ message: "Geçersiz veya izin verilmeyen link." });
     }
 
-    // 2. Dosya erişilebilir ve boş değil mi?
+    // 3. Dosya erişilebilir ve boş değil mi?
     const fileOk = await checkFileAccessible(driveLink);
     if (!fileOk) {
       return res.status(400).json({ message: "Dosya erişilemiyor veya çok küçük (boş)." });
     }
 
-    // 3. Course kodunu oluştur ve normalize et
+    // 4. Course kodunu oluştur ve normalize et
     let finalCourseCode;
 
     if (courseFormat === "split") {
@@ -115,7 +120,7 @@ const uploadNote = async (req, res) => {
       return res.status(400).json({ message: "Geçersiz ders kodu" });
     }
 
-    // 4. DepartmentCode kaydet
+    // 5. DepartmentCode kaydet
     if (courseFormat === "split" && departmentCode) {
       // Split format: departmentCode'u kaydet (COMP)
       await DepartmentCode.findOneAndUpdate(
@@ -148,7 +153,7 @@ const uploadNote = async (req, res) => {
       );
     }
 
-    // 5. Course bul veya oluştur (ATOMIC)
+    // 6. Course bul veya oluştur (ATOMIC)
     const course = await Course.findOneAndUpdate(
       {
         code: finalCourseCode,
@@ -166,10 +171,10 @@ const uploadNote = async (req, res) => {
       }
     );
 
-    // 6. Yıl formatını oluştur
+    // 7. Yıl formatını oluştur
     const formattedYear = year && semester ? `${year} - ${semester}` : year;
 
-    // 7. Not kaydet
+    // 8. Not kaydet
     const newNote = await Note.create({
       title,
       description,
@@ -181,7 +186,7 @@ const uploadNote = async (req, res) => {
       universityId: req.user.universityId
     });
 
-    // 8. 🎮 Gamification: Not yükleme puanı
+    // 9. 🎮 Gamification: Not yükleme puanı
     await gamificationService.onNoteUpload(req.user.userId);
 
     res.status(201).json({
@@ -233,7 +238,7 @@ const getNotesByCourseSlug = async (req, res) => {
 
     const notes = await Note.find(filter)
       .populate("courseId", "code type noteCount")
-      .populate("createdBy", "name email")
+      .populate("createdBy", "name")
       .sort({ createdAt: -1 });
 
     res.json(notes);

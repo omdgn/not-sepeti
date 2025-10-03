@@ -6,6 +6,8 @@ const extractEmailDomain = require("../utils/emailDomain");
 const { generateToken } = require("../utils/jwt");
 const { sendVerificationEmail } = require("../utils/email");
 const jwt = require("jsonwebtoken");
+const { validateAuth, validatePasswordReset, validateEmail } = require("../utils/validateInput");
+const { authLogger } = require("../utils/logger");
 
 // Şifre validasyon regex'i (Türkçe karakterler dahil)
 const passwordRegex = /^(?=.*[a-zçğıöşü])(?=.*[A-ZÇĞİÖŞÜ])(?=.*\d).{6,}$/;
@@ -15,8 +17,17 @@ const register = async (req, res) => {
   try {
     const { name, email, password, universityId, role, slug } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "İsim, e-posta ve şifre zorunludur." });
+    // Input validation
+    const validation = validateAuth(email, password, name);
+    if (!validation.valid) {
+      return res.status(400).json({ message: validation.message });
+    }
+
+    // Şifre karmaşıklığı kontrolü
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message: "Şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir."
+      });
     }
 
     // Eğer user ise üniversite zorunlu + domain kontrolü + slug zorunlu
@@ -80,7 +91,7 @@ const register = async (req, res) => {
       message: "Kayıt başarılı! Lütfen e-postanızı doğrulayın. (Spam kutusunu da kontrol edin.)"
     });
   } catch (err) {
-    console.error("❌ [REGISTER] Hata:", err.message);
+    authLogger.error("Register", err);
     res.status(500).json({ message: "Sunucu hatası" });
   }
 };
@@ -157,8 +168,10 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "E-posta ve şifre zorunludur." });
+    // Input validation
+    const validation = validateAuth(email, password);
+    if (!validation.valid) {
+      return res.status(400).json({ message: validation.message });
     }
 
     // Üniversite slug bilgisini almak için populate kullanıyoruz
@@ -206,7 +219,7 @@ const login = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("❌ [LOGIN] Hata:", err.message);
+    authLogger.error("Login", err);
     res.status(500).json({ message: "Sunucu hatası" });
   }
 };
@@ -216,7 +229,12 @@ const { sendResetPasswordEmail } = require("../utils/email");
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: "E-posta gereklidir." });
+
+    // Input validation
+    const validation = validateEmail(email);
+    if (!validation.valid) {
+      return res.status(400).json({ message: validation.message });
+    }
 
     const user = await User.findOne({ email });
     if (!user || user.role === "admin") {
@@ -240,7 +258,7 @@ const forgotPassword = async (req, res) => {
       message: "Eğer hesap varsa sıfırlama maili gönderildi."
     });
   } catch (err) {
-    console.error("❌ [FORGOT PASSWORD] Hata:", err.message);
+    authLogger.error("ForgotPassword", err);
     return res.status(500).json({ message: "Sunucu hatası" });
   }
 };
@@ -250,8 +268,14 @@ const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
-    if (!token || !newPassword) {
-      return res.status(400).json({ message: "Token ve yeni şifre zorunludur." });
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ message: "Geçersiz token" });
+    }
+
+    // Password validation
+    const validation = validatePasswordReset(newPassword);
+    if (!validation.valid) {
+      return res.status(400).json({ message: validation.message });
     }
 
     if (!passwordRegex.test(newPassword)) {
@@ -274,7 +298,7 @@ const resetPassword = async (req, res) => {
 
     return res.status(200).json({ message: "Şifre başarıyla güncellendi." });
   } catch (err) {
-    console.error("❌ [RESET PASSWORD] Hata:", err.message);
+    authLogger.error("ResetPassword", err);
     return res.status(400).json({ message: "Token geçersiz veya süresi dolmuş." });
   }
 };
@@ -390,8 +414,15 @@ const profileResetPassword = async (req, res) => {
     const userId = req.user.userId;
     const { currentPassword, newPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ message: "Mevcut şifre ve yeni şifre zorunludur" });
+    // Password validation
+    const currentValidation = validatePasswordReset(currentPassword);
+    if (!currentValidation.valid) {
+      return res.status(400).json({ message: "Mevcut şifre geçersiz" });
+    }
+
+    const newValidation = validatePasswordReset(newPassword);
+    if (!newValidation.valid) {
+      return res.status(400).json({ message: newValidation.message });
     }
 
     // Yeni şifre validasyonu
@@ -424,7 +455,7 @@ const profileResetPassword = async (req, res) => {
 
     return res.status(200).json({ message: "Şifre başarıyla güncellendi" });
   } catch (err) {
-    console.error("❌ [PROFILE RESET PASSWORD] Hata:", err.message);
+    authLogger.error("ProfileResetPassword", err);
     return res.status(500).json({ message: "Sunucu hatası" });
   }
 };

@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const NoteSchema = new mongoose.Schema({
   title: { type: String, required: true },
   courseId: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
-  instructor: { type: String },
+  instructor: { type: String, maxlength: 100 },
   driveLink: { type: String, required: true },
   year: { type: String },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -12,7 +12,7 @@ const NoteSchema = new mongoose.Schema({
   dislikes: { type: Number, default: 0 },
   reports: { type: Number, default: 0 },
   viewCount: { type: Number, default: 0 },
-  description: { type: String },
+  description: { type: String, maxlength: 750 },
   isActive: { type: Boolean, default: true },
   reactions: [
     {
