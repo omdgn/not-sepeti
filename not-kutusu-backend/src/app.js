@@ -74,7 +74,7 @@ app.get("/swagger-theme-toggle.js", (req, res) => {
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
-// Test route
+// Test route (health check)
 app.get("/ping", (req, res) => {
   res.json({ message: "Correct Request" });
 });
