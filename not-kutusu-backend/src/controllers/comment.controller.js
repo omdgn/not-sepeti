@@ -98,6 +98,7 @@ const deleteComment = async (req, res) => {
 const getCommentsForNote = async (req, res) => {
   try {
     const { noteId } = req.params;
+    const userId = req.user.userId;
     const userUniversityId = req.user.universityId;
 
     const note = await Note.findById(noteId);
@@ -113,134 +114,44 @@ const getCommentsForNote = async (req, res) => {
       .populate("userId", "name")
       .sort({ createdAt: -1 });
 
-    res.json({ comments });
+    // 🆕 Tüm yorumlar için kullanıcının reaction'larını tek sorguda çek
+    const Reaction = require("../models/reaction.model");
+    const commentIds = comments.map(c => c._id);
+
+    const reactions = await Reaction.find({
+      userId: userId,
+      targetType: "comment",
+      targetId: { $in: commentIds }
+    }).select("targetId type description timestamp");
+
+    // Her yoruma kendi reaction'ını ekle
+    const commentsWithReactions = comments.map(comment => {
+      const myReaction = reactions.find(r => r.targetId.toString() === comment._id.toString());
+      return {
+        ...comment.toObject(),
+        myReaction: myReaction ? {
+          type: myReaction.type,
+          description: myReaction.description,
+          timestamp: myReaction.timestamp
+        } : null
+      };
+    });
+
+    res.json({ comments: commentsWithReactions });
   } catch (err) {
     console.error("Yorum listeleme hatası:", err);
     res.status(500).json({ message: "Sunucu hatası" });
   }
 };
 
-// ✅ Like
-const likeComment = async (req, res) => {
-  try {
-    const commentId = req.params.id;
-    const userId = req.user.userId;
-    const { commentDescription = "" } = req.body || {};
-
-    const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ message: "Yorum bulunamadı" });
-
-    const existingReaction = comment.reactions.find(r => r.userId.toString() === userId);
-
-    if (existingReaction) {
-      if (existingReaction.type === "like") {
-        comment.reactions = comment.reactions.filter(r => r.userId.toString() !== userId);
-        comment.likes--;
-      } else {
-        if (existingReaction.type === "dislike") comment.dislikes--;
-        if (existingReaction.type === "report") comment.reports--;
-
-        comment.reactions = comment.reactions.filter(r => r.userId.toString() !== userId);
-        comment.reactions.push({ userId, type: "like", commentDescription });
-        comment.likes++;
-      }
-    } else {
-      comment.reactions.push({ userId, type: "like", commentDescription });
-      comment.likes++;
-    }
-
-    await comment.save();
-    res.status(200).json({ message: "Yorum beğenildi", likes: comment.likes });
-  } catch (err) {
-    console.error("Yorum beğeni hatası:", err);
-    res.status(500).json({ message: "İşlem başarısız" });
-  }
-};
-
-
-// ❌ Dislike
-const dislikeComment = async (req, res) => {
-  try {
-    const commentId = req.params.id;
-    const userId = req.user.userId;
-    const { commentDescription = "" } = req.body || {};
-
-    const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ message: "Yorum bulunamadı" });
-
-    const existingReaction = comment.reactions.find(r => r.userId.toString() === userId);
-
-    if (existingReaction) {
-      if (existingReaction.type === "dislike") {
-        comment.reactions = comment.reactions.filter(r => r.userId.toString() !== userId);
-        comment.dislikes--;
-      } else {
-        if (existingReaction.type === "like") comment.likes--;
-        if (existingReaction.type === "report") comment.reports--;
-
-        comment.reactions = comment.reactions.filter(r => r.userId.toString() !== userId);
-        comment.reactions.push({ userId, type: "dislike", commentDescription });
-        comment.dislikes++;
-      }
-    } else {
-      comment.reactions.push({ userId, type: "dislike", commentDescription });
-      comment.dislikes++;
-    }
-
-    await comment.save();
-    res.status(200).json({ message: "Yorum beğenilmedi", dislikes: comment.dislikes });
-  } catch (err) {
-    console.error("Yorum dislike hatası:", err);
-    res.status(500).json({ message: "İşlem başarısız" });
-  }
-};
-
-
-// 🚩 Report
-const reportComment = async (req, res) => {
-  try {
-    const commentId = req.params.id;
-    const userId = req.user.userId;
-    const { commentDescription = "" } = req.body || {};
-
-    const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ message: "Yorum bulunamadı" });
-
-    const existingReaction = comment.reactions.find(r => r.userId.toString() === userId);
-
-    if (existingReaction) {
-      if (existingReaction.type === "report") {
-        comment.reactions = comment.reactions.filter(r => r.userId.toString() !== userId);
-        comment.reports--;
-      } else {
-        if (existingReaction.type === "like") comment.likes--;
-        if (existingReaction.type === "dislike") comment.dislikes--;
-
-        comment.reactions = comment.reactions.filter(r => r.userId.toString() !== userId);
-        comment.reactions.push({ userId, type: "report", commentDescription });
-        comment.reports++;
-      }
-    } else {
-      comment.reactions.push({ userId, type: "report", commentDescription });
-      comment.reports++;
-    }
-
-    await comment.save();
-    res.status(200).json({ message: "Yorum raporlandı", reports: comment.reports });
-  } catch (err) {
-    console.error("Yorum report hatası:", err);
-    res.status(500).json({ message: "İşlem başarısız" });
-  }
-};
+// ⚠️ DEPRECATED: Reaction işlemleri artık reaction.controller.js'de
+// Yeni route: POST /api/:targetType/:id/like (targetType = "comment")
 
 
 
 module.exports = {
   addComment,
   deleteComment,
-  getCommentsForNote,
-  likeComment,
-  dislikeComment,
-  reportComment
+  getCommentsForNote
 };
 

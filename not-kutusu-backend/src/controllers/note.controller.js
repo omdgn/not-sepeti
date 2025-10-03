@@ -63,8 +63,8 @@ const uploadNote = async (req, res) => {
     } = req.body;
 
     // 1. Description karakter limiti kontrolü
-    if (description && description.length > 750) {
-      return res.status(400).json({ message: "Açıklama 750 karakterden uzun olamaz" });
+    if (description && description.length > 500) {
+      return res.status(400).json({ message: "Açıklama 500 karakterden uzun olamaz" });
     }
 
     // 2. URL geçerli mi?
@@ -259,6 +259,11 @@ const getNoteById = async (req, res) => {
       return res.status(404).json({ message: "Not bulunamadı" });
     }
 
+    // 🔒 Pasif notlar görüntülenemez
+    if (!note.isActive) {
+      return res.status(404).json({ message: "Not bulunamadı" });
+    }
+
     if (note.universityId.toString() !== req.user.universityId.toString()) {
       return res.status(403).json({ message: "Erişim yetkiniz yok" });
     }
@@ -267,171 +272,29 @@ const getNoteById = async (req, res) => {
     await Note.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } });
     note.viewCount += 1;
 
-    res.json(note);
+    // 🆕 Kullanıcının bu not için reaction'ını ekle
+    const Reaction = require("../models/reaction.model");
+    const myReaction = await Reaction.findOne({
+      userId: req.user.userId,
+      targetType: "note",
+      targetId: req.params.id
+    }).select("type description timestamp");
+
+    const response = {
+      ...note.toObject(),
+      myReaction: myReaction || null
+    };
+
+    res.json(response);
   } catch (err) {
     console.error("Not detay hatası:", err);
     res.status(500).json({ message: "Not getirilemedi" });
   }
 };
 
-// ✅ Beğeni (Like)
-const likeNote = async (req, res) => {
-  try {
-    const noteId = req.params.id;
-    const userId = req.user.userId;
-    const { processDescription = "" } = req.body || {};
-
-    const note = await Note.findById(noteId);
-    if (!note) return res.status(404).json({ message: "Not bulunamadı" });
-
-    const existingReaction = note.reactions.find(r => r.userId.toString() === userId);
-    let shouldSendNotification = false;
-
-    if (existingReaction) {
-      if (existingReaction.type === "like") {
-        // 👍 Like varsa tekrar tıklanmış = kaldır
-        note.reactions = note.reactions.filter(r => r.userId.toString() !== userId);
-        note.likes--;
-
-        // 🎮 Gamification: Like kaldırıldı
-        await gamificationService.onLikeRemoved(note.createdBy.toString());
-      } else {
-        // 👎 veya 🚩 varsa, önce kaldır sonra 👍 ekle
-        if (existingReaction.type === "dislike") note.dislikes--;
-        if (existingReaction.type === "report") note.reports--;
-
-        note.reactions = note.reactions.filter(r => r.userId.toString() !== userId);
-        note.reactions.push({ userId, type: "like", processDescription });
-        note.likes++;
-
-        // 🎮 Gamification: Yeni like aldı
-        await gamificationService.onLikeReceived(note.createdBy.toString());
-        shouldSendNotification = true;
-      }
-    } else {
-      // 🔄 Hiç reaksiyonu yoksa direkt ekle
-      note.reactions.push({ userId, type: "like", processDescription });
-      note.likes++;
-
-      // 🎮 Gamification: Yeni like aldı
-      await gamificationService.onLikeReceived(note.createdBy.toString());
-      shouldSendNotification = true;
-    }
-
-    await note.save();
-
-    // 📢 Bildirim gönder (sadece yeni like eklendiğinde)
-    if (shouldSendNotification) {
-      const notificationService = require("../services/notificationService");
-      const io = req.app.get("io");
-      await notificationService.createLikeNotification(
-        userId,
-        req.user.name,
-        noteId,
-        note.createdBy.toString(),
-        io
-      );
-    }
-
-    res.status(200).json({ message: "Beğeni güncellendi", likes: note.likes });
-  } catch (err) {
-    console.error("Beğeni hatası:", err);
-    res.status(500).json({ message: "İşlem başarısız" });
-  }
-};
-
-
-
-// ❌ Beğenmeme (dislike)
-const dislikeNote = async (req, res) => {
-  try {
-    const noteId = req.params.id;
-    const userId = req.user.userId;
-    const { processDescription = "" } = req.body || {};
-
-    const note = await Note.findById(noteId);
-    if (!note) return res.status(404).json({ message: "Not bulunamadı" });
-
-    const existingReaction = note.reactions.find(r => r.userId.toString() === userId);
-
-    if (existingReaction) {
-      if (existingReaction.type === "dislike") {
-        // ❌ Zaten dislike varsa = kaldır
-        note.reactions = note.reactions.filter(r => r.userId.toString() !== userId);
-        note.dislikes--;
-      } else {
-        // 👍 veya 🚩 varsa, önce kaldır sonra ❌ ekle
-        if (existingReaction.type === "like") note.likes--;
-        if (existingReaction.type === "report") note.reports--;
-
-        note.reactions = note.reactions.filter(r => r.userId.toString() !== userId);
-        note.reactions.push({ userId, type: "dislike", processDescription });
-        note.dislikes++;
-      }
-    } else {
-      // 🔄 Hiç reaksiyon yoksa direkt ekle
-      note.reactions.push({ userId, type: "dislike", processDescription });
-      note.dislikes++;
-    }
-
-    await note.save();
-    res.status(200).json({ message: "Beğenmeme güncellendi", dislikes: note.dislikes });
-  } catch (err) {
-    console.error("Dislike hatası:", err);
-    res.status(500).json({ message: "İşlem başarısız" });
-  }
-};
-
-
-
-// 🚩 Raporla (report)
-const reportNote = async (req, res) => {
-  try {
-    const noteId = req.params.id;
-    const userId = req.user.userId;
-    const { processDescription = "" } = req.body || {};
-
-    const note = await Note.findById(noteId);
-    if (!note) return res.status(404).json({ message: "Not bulunamadı" });
-
-    const existingReaction = note.reactions.find(r => r.userId.toString() === userId);
-
-    if (existingReaction) {
-      if (existingReaction.type === "report") {
-        // 🚩 Zaten report varsa = kaldır
-        note.reactions = note.reactions.filter(r => r.userId.toString() !== userId);
-        note.reports--;
-      } else {
-        // 👍 veya ❌ varsa, önce kaldır sonra 🚩 ekle
-        if (existingReaction.type === "like") note.likes--;
-        if (existingReaction.type === "dislike") note.dislikes--;
-
-        note.reactions = note.reactions.filter(r => r.userId.toString() !== userId);
-        note.reactions.push({ userId, type: "report", processDescription });
-        note.reports++;
-      }
-    } else {
-      // 🔄 Hiç reaksiyon yoksa direkt ekle
-      note.reactions.push({ userId, type: "report", processDescription });
-      note.reports++;
-    }
-
-    // 🚫 10+ report varsa notu pasifleştir
-    if (note.reports >= 15) {
-      note.isActive = false;
-    }
-
-    await note.save();
-    res.status(200).json({
-      message: "Raporlama işlemi tamamlandı",
-      reports: note.reports,
-      isActive: note.isActive
-    });
-  } catch (err) {
-    console.error("Report hatası:", err);
-    res.status(500).json({ message: "İşlem başarısız" });
-  }
-};
+// ⚠️ DEPRECATED: Reaction işlemleri artık reaction.controller.js'de
+// Bu fonksiyonlar geriye dönük uyumluluk için kaldırıldı
+// Yeni route: POST /api/note/:id/like → POST /api/:targetType/:id/like
 
 
 
@@ -873,9 +736,6 @@ module.exports = {
   uploadNote,
   getNoteById,
   getNotesByCourseSlug,
-  likeNote,
-  dislikeNote,
-  reportNote,
   getTopContributors,
   getTopNotes,
   searchNotes,

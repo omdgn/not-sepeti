@@ -73,12 +73,22 @@ const NotificationSchema = new mongoose.Schema({
 NotificationSchema.index({ userId: 1, isRead: 1, lastUpdated: -1 });
 NotificationSchema.index({ userId: 1, type: 1, relatedNoteId: 1 }); // Upsert için
 
-// TTL index - 30 gün sonra otomatik sil (okunmuşlar)
+// 🗑️ TTL Index 1: Okunmuş bildirimler - 30 gün sonra otomatik sil
 NotificationSchema.index(
   { lastUpdated: 1 },
   {
-    expireAfterSeconds: 2592000, // 30 gün
-    partialFilterExpression: { isRead: true } // Sadece okunmuşlar silinsin
+    expireAfterSeconds: 2592000, // 30 gün (30 * 24 * 60 * 60)
+    partialFilterExpression: { isRead: true }
+  }
+);
+
+// 🗑️ TTL Index 2: Okunmamış bildirimler - 30 gün sonra otomatik sil
+// 30 gün login olmayan kullanıcı = inactive, bildirimleri temizlenir
+NotificationSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 2592000, // 30 gün (30 * 24 * 60 * 60)
+    partialFilterExpression: { isRead: false }
   }
 );
 

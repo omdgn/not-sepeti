@@ -59,17 +59,6 @@ const getUserProfile = async (req, res) => {
 };
 
 
-// const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
-
-// console.log(passwordRegex.test("abc"));         // ❌ false (çok kısa + büyük harf yok + rakam yok)
-// console.log(passwordRegex.test("abcdef"));      // ❌ false (büyük harf yok + rakam yok)
-// console.log(passwordRegex.test("abcdef1"));     // ❌ false (büyük harf yok)
-// console.log(passwordRegex.test("ABCDEF1"));     // ❌ false (küçük harf yok)
-// console.log(passwordRegex.test("Abcdef"));      // ❌ false (rakam yok)
-// console.log(passwordRegex.test("Abcdef1"));     // ✅ true (6+ karakter, küçük + büyük harf + rakam var)
-// console.log(passwordRegex.test("YeniSifre123")); // ✅ true
-
-
 const bcrypt = require("bcryptjs");
 
 // 🔄 Kullanıcı Profilini Güncelle (sadece kendisi)

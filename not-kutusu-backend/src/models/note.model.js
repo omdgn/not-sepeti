@@ -12,22 +12,13 @@ const NoteSchema = new mongoose.Schema({
   dislikes: { type: Number, default: 0 },
   reports: { type: Number, default: 0 },
   viewCount: { type: Number, default: 0 },
-  description: { type: String, maxlength: 750 },
-  isActive: { type: Boolean, default: true },
-  reactions: [
-    {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-      type: { type: String, enum: ["like", "dislike", "report"], required: true },
-      processDescription: { type: String, maxlength: 200 },
-      timestamp: { type: Date, default: Date.now }
-    }
-  ]
+  description: { type: String, maxlength: 550 },
+  isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
 NoteSchema.index({ universityId: 1 });
 NoteSchema.index({ courseId: 1 });
 NoteSchema.index({ createdBy: 1 });
-NoteSchema.index({ "reactions.userId": 1 });
 NoteSchema.index({ likes: -1, reports: -1, createdAt: -1 });
 NoteSchema.index({ isActive: 1, reports: -1 });
 NoteSchema.index({

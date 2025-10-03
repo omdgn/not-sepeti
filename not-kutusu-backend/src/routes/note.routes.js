@@ -1,14 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
-const { interactionLimiter } = require("../middleware/rateLimiter");
 const {
   uploadNote,
   getNoteById,
   getNotesByCourseSlug,
-  likeNote,
-  dislikeNote,
-  reportNote,
   getTopContributors,
   getTopNotes,
   searchNotes,
@@ -24,9 +20,11 @@ router.patch("/notes/:id", authMiddleware, updateNote);
 router.delete("/notes/:id", authMiddleware, deleteNote);
 router.get("/:slug/notes", authMiddleware, getNotesByCourseSlug);
 router.get("/:slug/courses/:courseId/notes", authMiddleware, getNotesByCourseSlug);
-router.patch("/notes/:id/like", authMiddleware, interactionLimiter, likeNote);
-router.patch("/notes/:id/dislike", authMiddleware, interactionLimiter, dislikeNote);
-router.patch("/notes/:id/report", authMiddleware, interactionLimiter, reportNote);
+
+// ⚠️ DEPRECATED: Reaction routes moved to reaction.routes.js
+// Old: PATCH /api/notes/:id/like
+// New: POST /api/note/:id/like (via reaction.routes.js)
+
 router.get("/:slug/top-contributors", authMiddleware, getTopContributors);
 router.get("/:slug/top-notes", authMiddleware, getTopNotes);
 router.get("/:slug/notes/search", authMiddleware, searchNotes);

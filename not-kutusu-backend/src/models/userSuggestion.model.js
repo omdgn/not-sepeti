@@ -41,4 +41,16 @@ UserSuggestionSchema.index({
   content: "text"
 });
 
+// 🗑️ TTL Index: Kapanmış önerileri otomatik sil
+// "Eklendi" veya "Eklenmedi" statusundaki öneriler 15 gün sonra silinir
+UserSuggestionSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 1296000, // 15 gün (15 * 24 * 60 * 60)
+    partialFilterExpression: {
+      status: { $in: ["Eklendi", "Eklenmedi"] }
+    }
+  }
+);
+
 module.exports = mongoose.model("UserSuggestion", UserSuggestionSchema, "UserSuggestion");
