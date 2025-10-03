@@ -301,36 +301,6 @@ const updateProfile = async (req, res) => {
       if (!name || name.trim().length < 2 || name.trim().length > 50) {
         return res.status(400).json({ message: "İsim 2-50 karakter arasında olmalıdır" });
       }
-
-      // Türkçe karaktersiz normalize edilmiş isim oluştur
-      const normalizeForComparison = (text) => {
-        return text
-          .toLowerCase()
-          .replace(/ı/g, 'i')
-          .replace(/ğ/g, 'g')
-          .replace(/ü/g, 'u')
-          .replace(/ş/g, 's')
-          .replace(/ö/g, 'o')
-          .replace(/ç/g, 'c')
-          .replace(/İ/g, 'i')
-          .trim();
-      };
-
-      // İsim benzersizlik kontrolü (Türkçe karakterden bağımsız)
-      const normalizedInputName = normalizeForComparison(name);
-      const allUsers = await User.find({}).select('name _id');
-
-      for (const existingUser of allUsers) {
-        if (existingUser._id.toString() === userId.toString()) continue;
-
-        const normalizedExistingName = normalizeForComparison(existingUser.name);
-        if (normalizedExistingName === normalizedInputName) {
-          return res.status(400).json({
-            message: "Bu isim başka bir kullanıcı tarafından kullanılıyor (Türkçe karakter farklılıkları göz ardı edilir)"
-          });
-        }
-      }
-
       user.name = name.trim();
     }
 
