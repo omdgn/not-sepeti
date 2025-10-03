@@ -1,5 +1,5 @@
 
-//Components (Schemas + Security) 
+// ======================= COMPONENTS & SCHEMAS =======================
 
 /**
  * @openapi
@@ -13,260 +13,86 @@
  *   schemas:
  *     User:
  *       type: object
- *       required: [name, email, password, universityId]
+ *       description: MongoDB `User` dokümanı.
  *       properties:
- *         id:
+ *         _id:
  *           type: string
  *           format: objectId
- *           description: "Kullanıcı ID (otomatik)"
- *           example: "64fbbf9e12ab34cd56ef7890"
  *         name:
  *           type: string
- *           description: "Kullanıcı adı (zorunlu, benzersiz olması gerekmez)"
- *           example: "Ali Yılmaz"
  *         email:
  *           type: string
- *           description: "Kullanıcı e-posta adresi (zorunlu)"
- *           example: "ali@boun.edu.tr"
+ *           format: email
  *         password:
  *           type: string
- *           description: "Şifre (zorunlu)"
- *           example: "YeniSifre123"
  *         universityId:
  *           type: string
  *           format: objectId
- *           description: "Kullanıcının bağlı olduğu üniversite ID (zorunlu)"
- *           example: "64fbbf9e12ab34cd56ef7891"
+ *           nullable: true
  *         profilePic:
  *           type: string
- *           description: "Profil fotoğrafı (opsiyonel)"
- *           example: "https://example.com/avatar.png"
+ *           nullable: true
  *         score:
- *           type: number
- *           description: "Toplam kullanıcı puanı (varsayılan 0)"
- *           example: 520
+ *           type: integer
  *         monthlyScore:
- *           type: number
- *           description: "Aylık kullanıcı puanı (her ay sıfırlanır)"
- *           example: 85
+ *           type: integer
  *         level:
- *           type: number
- *           description: "Kullanıcı seviyesi (1-6 arası)"
- *           example: 3
+ *           type: integer
  *         badges:
  *           type: array
  *           items:
  *             type: string
- *           description: "Kullanıcının kazandığı rozet ID'leri"
- *           example: ["first_note", "contributor", "social"]
  *         stats:
  *           type: object
- *           description: "Kullanıcı istatistikleri"
  *           properties:
  *             notes:
- *               type: number
- *               example: 15
+ *               type: integer
  *             comments:
- *               type: number
- *               example: 42
+ *               type: integer
  *             likesReceived:
- *               type: number
- *               example: 73
+ *               type: integer
  *         lastMonthlyReset:
  *           type: string
  *           format: date-time
- *           description: "Son aylık puan sıfırlama tarihi"
+ *           nullable: true
  *         aboutMe:
  *           type: string
- *           description: "Kullanıcı hakkında kısa bilgi (opsiyonel)"
- *           example: "3. sınıf bilgisayar mühendisliği öğrencisi"
+ *           nullable: true
  *         department:
  *           type: string
- *           description: "Kullanıcının bölümü (opsiyonel)"
- *           example: "Bilgisayar Mühendisliği"
+ *           nullable: true
  *         socialLinks:
  *           type: object
- *           description: "Sosyal medya bağlantıları"
  *           properties:
  *             linkedin:
  *               type: string
- *               example: "https://linkedin.com/in/kullanici"
+ *               nullable: true
  *             github:
  *               type: string
- *               example: "https://github.com/kullanici"
+ *               nullable: true
  *         notifications:
  *           type: boolean
- *           description: "Bildirim tercihi (varsayılan true)"
- *           example: true
+ *         isVerified:
+ *           type: boolean
+ *         isActive:
+ *           type: boolean
  *         role:
  *           type: string
  *           enum: [user, admin]
- *           description: "Kullanıcı rolü (varsayılan user)"
- *           example: "user"
- *         isVerified:
- *             type: boolean
- *             description: "Kullanıcının e-posta doğrulama durumu (varsayılan false)"
- *             example: false
  *         verificationToken:
- *             type: string
- *             description: "E-posta doğrulama tokeni (opsiyonel, sadece backend için)"
- *             example: "eyJhbGciOiJIUzI1NiIs..."
+ *           type: string
+ *           nullable: true
  *         verificationExpires:
- *             type: string
- *             format: date-time
- *             description: "Doğrulama tokeninin geçerlilik süresi"
- *         isActive:
- *             type: boolean
- *             description: "Kullanıcı aktif mi (ban/pasif kontrolü için)"
- *             example: true
+ *           type: string
+ *           format: date-time
+ *           nullable: true
  *         resetPasswordToken:
  *           type: string
- *           description: Şifre sıfırlama tokeni (opsiyonel, sadece backend için)
- *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *           nullable: true
  *         resetPasswordExpires:
  *           type: string
  *           format: date-time
- *           description: Şifre sıfırlama tokeninin geçerlilik süresi
- *           example: "2025-09-02T18:00:00.000Z"
- * 
- *
- *     University:
- *       type: object
- *       required: [name, slug, emailDomains]
- *       properties:
- *         id:
- *           type: string
- *           format: objectId
- *           description: Üniversite ID (otomatik)
- *           example: "64fbbf9e12ab34cd56ef7892"
- *         name:
- *           type: string
- *           description: Üniversite adı (zorunlu)
- *           example: "Boğaziçi Üniversitesi"
- *         slug:
- *           type: string
- *           description: Üniversite slug değeri (zorunlu, URL için kullanılır)
- *           example: "bogazici"
- *         emailDomains:
- *           type: array
- *           description: Geçerli e-posta domain listesi
- *           items:
- *             type: string
- *           example: ["boun.edu.tr", "alumni.boun.edu.tr"]
- *
- *
- *     Course:
- *       type: object
- *       required: [code, universityId]
- *       properties:
- *         id:
- *           type: string
- *           format: objectId
- *           description: Ders ID (otomatik)
- *           example: "64fbbf9e12ab34cd56ef7893"
- *         code:
- *           type: string
- *           description: Ders kodu (zorunlu, backend otomatik olarak büyük harfe çevirir ve boşluk/tireleri kaldırır)
- *           example: "COMP101E"
- *         universityId:
- *           type: string
- *           format: objectId
- *           description: Bu dersin bağlı olduğu üniversitenin ID'si
- *           example: "64fbbf9e12ab34cd56ef7892"
- *         noteCount:
- *           type: number
- *           description: Bu derse ait yüklenen toplam not sayısı (opsiyonel, varsayılan 0)
- *           example: 5
- *
- *     Note:
- *       type: object
- *       required: [title, courseId, driveLink, createdBy, universityId]
- *       properties:
- *         id:
- *           type: string
- *           format: objectId
- *           description: Not ID (otomatik)
- *           example: "64fbbf9e12ab34cd56ef7894"
- *         title:
- *           type: string
- *           description: Not başlığı (zorunlu)
- *           example: "Veritabanı Final Notları"
- *         description:
- *           type: string
- *           description: Not açıklaması (opsiyonel)
- *           example: "Sınavda çıkması muhtemel konuların özeti"
- *         courseId:
- *           type: string
- *           format: objectId
- *           description: Notun ait olduğu ders ID'si
- *           example: "64fbbf9e12ab34cd56ef7893"
- *         instructor:
- *           type: string
- *           description: Dersi veren öğretim üyesi (opsiyonel)
- *           example: "Prof. Dr. Ayşe Yılmaz"
- *         driveLink:
- *           type: string
- *           description: Notun Google Drive linki (zorunlu)
- *           example: "https://drive.google.com/file/abc123"
- *         year:
- *           type: string
- *           description: Notun yılı (opsiyonel)
- *           example: "2024"
- *         createdBy:
- *           type: string
- *           format: objectId
- *           description: Notu yükleyen kullanıcı ID'si
- *           example: "64fbbf9e12ab34cd56ef7890"
- *         universityId:
- *           type: string
- *           format: objectId
- *           description: Notun ait olduğu üniversite ID'si
- *           example: "64fbbf9e12ab34cd56ef7892"
- *         likes:
- *           type: number
- *           description: Beğeni sayısı (varsayılan 0)
- *           example: 14
- *         dislikes:
- *           type: number
- *           description: Beğenmeme sayısı (varsayılan 0)
- *           example: 2
- *         reports:
- *           type: number
- *           description: Rapor sayısı (varsayılan 0)
- *           example: 1
- *         viewCount:
- *           type: number
- *           description: Görüntülenme sayısı (varsayılan 0)
- *           example: 125
- *         isActive:
- *           type: boolean
- *           description: Notun aktif olup olmadığı (15+ rapor edilince false olur)
- *           example: true
- *         reactions:
- *           type: array
- *           description: Notla ilgili kullanıcı reaksiyonları (beğeni, beğenmeme, rapor) ve açıklamaları
- *           items:
- *             type: object
- *             properties:
- *               userId:
- *                 type: string
- *                 format: objectId
- *                 description: Tepki veren kullanıcı ID'si
- *                 example: "64fbbf9e12ab34cd56ef7890"
- *               type:
- *                 type: string
- *                 enum: [like, dislike, report]
- *                 description: Tepki türü
- *                 example: "like"
- *               processDescription:
- *                 type: string
- *                 description: Tepki açıklaması, max 200 karakter (opsiyonel)
- *                 example: "İçerik eksik veya yanıltıcı"
- *               timestamp:
- *                 type: string
- *                 format: date-time
- *                 description: Tepki zamanı
- *                 example: "2025-09-05T12:30:00Z"
+ *           nullable: true
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -274,669 +100,281 @@
  *           type: string
  *           format: date-time
  *
- *     NotificationActor:
+ *     University:
  *       type: object
- *       description: Bildirimi tetikleyen kullanıcı bilgisi (en fazla 3 kişi saklanır)
+ *       description: MongoDB `University` dokümanı.
  *       properties:
+ *         _id:
+ *           type: string
+ *           format: objectId
+ *         name:
+ *           type: string
+ *         slug:
+ *           type: string
+ *         emailDomains:
+ *           type: array
+ *           items:
+ *             type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     Course:
+ *       type: object
+ *       description: MongoDB `Course` dokümanı.
+ *       properties:
+ *         _id:
+ *           type: string
+ *           format: objectId
+ *         code:
+ *           type: string
+ *         type:
+ *           type: string
+ *           enum: [split, single]
+ *         universityId:
+ *           type: string
+ *           format: objectId
+ *         noteCount:
+ *           type: integer
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     Note:
+ *       type: object
+ *       description: MongoDB `Note` dokümanı.
+ *       properties:
+ *         _id:
+ *           type: string
+ *           format: objectId
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *           nullable: true
+ *         courseId:
+ *           type: string
+ *           format: objectId
+ *         instructor:
+ *           type: string
+ *           nullable: true
+ *         driveLink:
+ *           type: string
+ *         year:
+ *           type: string
+ *           nullable: true
+ *         createdBy:
+ *           type: string
+ *           format: objectId
+ *         universityId:
+ *           type: string
+ *           format: objectId
+ *         likes:
+ *           type: integer
+ *         dislikes:
+ *           type: integer
+ *         reports:
+ *           type: integer
+ *         viewCount:
+ *           type: integer
+ *         isActive:
+ *           type: boolean
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     Comment:
+ *       type: object
+ *       description: MongoDB `Comment` dokümanı.
+ *       properties:
+ *         _id:
+ *           type: string
+ *           format: objectId
+ *         noteId:
+ *           type: string
+ *           format: objectId
  *         userId:
  *           type: string
  *           format: objectId
- *           example: "64fbbf9e12ab34cd56ef7890"
- *         name:
+ *         text:
  *           type: string
- *           example: "Ayşe Yılmaz"
+ *         likes:
+ *           type: integer
+ *         dislikes:
+ *           type: integer
+ *         reports:
+ *           type: integer
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     DepartmentCode:
+ *       type: object
+ *       description: MongoDB `DepartmentCode` dokümanı.
+ *       properties:
+ *         _id:
+ *           type: string
+ *           format: objectId
+ *         code:
+ *           type: string
+ *         type:
+ *           type: string
+ *           enum: [split, single]
+ *         universityId:
+ *           type: string
+ *           format: objectId
+ *         addedBy:
+ *           type: string
+ *           format: objectId
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
  *
  *     Notification:
  *       type: object
- *       description: Kullanıcı bildirim dokümanı
+ *       description: MongoDB `Notification` dokümanı.
  *       properties:
- *         id:
+ *         _id:
  *           type: string
  *           format: objectId
- *           example: "673c1db7f1d7fd2e8c1a1234"
+ *         userId:
+ *           type: string
+ *           format: objectId
  *         type:
  *           type: string
  *           enum: [like, comment, badge, level_up]
- *           description: Bildirim türü
- *           example: "like"
  *         relatedNoteId:
  *           type: string
  *           format: objectId
  *           nullable: true
- *           description: Notla ilgili bildirimlerde ilgili not ID'si
- *           example: "64fbbf9e12ab34cd56ef7893"
  *         lastComment:
  *           type: string
  *           nullable: true
- *           description: Yorum bildirimlerinde son yorumun kısa özeti (100 karakter)
- *           example: "Soru 4'ün çözümü şöyle olmalı..."
  *         badge:
  *           type: object
  *           nullable: true
  *           properties:
  *             id:
  *               type: string
- *               example: "contributor"
  *             name:
  *               type: string
- *               example: "Katkıcı"
  *             icon:
  *               type: string
- *               example: "📚"
  *         newLevel:
  *           type: integer
  *           nullable: true
- *           minimum: 1
- *           maximum: 6
- *           description: Seviye bildirimi için ulaşılan yeni seviye
- *           example: 3
  *         count:
  *           type: integer
- *           description: Gruplanmış bildirimlerde toplam olay sayısı
- *           example: 4
  *         lastActors:
  *           type: array
- *           description: Bildirimi tetikleyen son kullanıcılar (en fazla 3 kişi)
- *           items:
- *             $ref: '#/components/schemas/NotificationActor'
- *         isRead:
- *           type: boolean
- *           description: Bildirimin okunup okunmadığı
- *           example: false
- *         lastUpdated:
- *           type: string
- *           format: date-time
- *           description: Bildirimin son güncellenme zamanı
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
- *
- *     NotificationListResponse:
- *       type: object
- *       properties:
- *         notifications:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/Notification'
- *         pagination:
- *           type: object
- *           properties:
- *             currentPage:
- *               type: integer
- *               example: 1
- *             totalPages:
- *               type: integer
- *               example: 5
- *             totalNotifications:
- *               type: integer
- *               example: 87
- *             unreadCount:
- *               type: integer
- *               example: 12
- *             hasNextPage:
- *               type: boolean
- *               example: true
- *
- *     LatestNoteSummary:
- *       type: object
- *       description: Keşfet sayfası için sadeleştirilmiş not bilgisi
- *       properties:
- *         id:
- *           type: string
- *           format: objectId
- *           example: "64fbbf9e12ab34cd56ef7894"
- *         title:
- *           type: string
- *           example: "Veritabanı Finalleri 2023"
- *         courseCode:
- *           type: string
- *           example: "COMP101E"
- *         courseType:
- *           type: string
- *           enum: [split, single]
- *           example: "split"
- *         instructor:
- *           type: string
- *           example: "Dr. Mehmet Demir"
- *         semester:
- *           type: string
- *           example: "2023/2024 Güz"
- *         uploadDate:
- *           type: string
- *           format: date-time
- *           example: "2024-01-05T12:34:00.000Z"
- *         driveLink:
- *           type: string
- *           format: uri
- *           example: "https://drive.google.com/file/d/1AbCdEf"
- *         uploadedBy:
- *           type: string
- *           description: Notu yükleyen kullanıcının adı
- *           example: "Elif Çelik"
- *
- *     TopContributorSummary:
- *       type: object
- *       description: Belirli bir üniversitede en çok katkı sağlayan kullanıcı bilgisi
- *       properties:
- *         name:
- *           type: string
- *           example: "Ali Yılmaz"
- *         profilePic:
- *           type: string
- *           nullable: true
- *           example: "https://example.com/avatar.png"
- *         score:
- *           type: integer
- *           description: Kullanıcının mevcut toplam puanı
- *           example: 540
- *         noteCount:
- *           type: integer
- *           description: Yüklediği toplam not sayısı
- *           example: 18
- *         totalLikes:
- *           type: integer
- *           description: Notlarının aldığı toplam beğeni
- *           example: 125
- *         totalDislikes:
- *           type: integer
- *           description: Notlarının aldığı toplam beğenmeme
- *           example: 4
- *         totalReports:
- *           type: integer
- *           description: Notlarının aldığı toplam rapor
- *           example: 1
- *
- *     PopularNoteSummary:
- *       type: object
- *       description: En çok beğenilen notlar listesi için özet veri
- *       properties:
- *         id:
- *           type: string
- *           format: objectId
- *           example: "64fbbf9e12ab34cd56ef7894"
- *         title:
- *           type: string
- *           example: "Differential Equations Cheat Sheet"
- *         likes:
- *           type: integer
- *           example: 87
- *         dislikes:
- *           type: integer
- *           example: 2
- *         reports:
- *           type: integer
- *           example: 0
- *         createdAt:
- *           type: string
- *           format: date-time
- *           example: "2024-02-11T10:05:00.000Z"
- *         course:
- *           type: object
- *           nullable: true
- *           properties:
- *             id:
- *               type: string
- *               format: objectId
- *               example: "64fbbf9e12ab34cd56ef7893"
- *             code:
- *               type: string
- *               example: "MATH202"
- *             name:
- *               type: string
- *               nullable: true
- *               example: "Calculus II"
- *         uploader:
- *           type: object
- *           nullable: true
- *           properties:
- *             id:
- *               type: string
- *               format: objectId
- *               example: "64fbbf9e12ab34cd56ef7890"
- *             name:
- *               type: string
- *               example: "Elif Çelik"
- *             score:
- *               type: integer
- *               example: 420
- *
- *     NoteSearchResult:
- *       type: object
- *       description: Not arama sorgularında dönen detaylı not bilgisi
- *       properties:
- *         id:
- *           type: string
- *           format: objectId
- *           example: "64fbbf9e12ab34cd56ef7894"
- *         title:
- *           type: string
- *           example: "Database Final Notes"
- *         description:
- *           type: string
- *           nullable: true
- *           example: "Sınava girmeden önce mutlaka okuyun"
- *         instructor:
- *           type: string
- *           nullable: true
- *           example: "Dr. Ayşe Demir"
- *         year:
- *           type: string
- *           nullable: true
- *           example: "2023 - Güz"
- *         likes:
- *           type: integer
- *           example: 32
- *         dislikes:
- *           type: integer
- *           example: 1
- *         reports:
- *           type: integer
- *           example: 0
- *         createdAt:
- *           type: string
- *           format: date-time
- *           example: "2024-02-01T09:30:00.000Z"
- *         course:
- *           type: object
- *           nullable: true
- *           properties:
- *             id:
- *               type: string
- *               format: objectId
- *               example: "64fbbf9e12ab34cd56ef7893"
- *             code:
- *               type: string
- *               example: "COMP202"
- *             name:
- *               type: string
- *               nullable: true
- *               example: "Data Structures"
- *         createdBy:
- *           type: object
- *           nullable: true
- *           properties:
- *             id:
- *               type: string
- *               format: objectId
- *               example: "64fbbf9e12ab34cd56ef7890"
- *             name:
- *               type: string
- *               example: "Ali Yılmaz"
- *
- *     NoteSearchResponse:
- *       type: object
- *       properties:
- *         notes:
- *           type: array
- *           items:
- *             $ref: '#/components/schemas/NoteSearchResult'
- *
- *     Comment:
- *       type: object
- *       required: [noteId, userId, text]
- *       properties:
- *         id:
- *           type: string
- *           format: objectId
- *           description: Yorum ID (otomatik)
- *           example: "64fbbf9e12ab34cd56ef7895"
- *         noteId:
- *           type: string
- *           format: objectId
- *           description: Yorumun ait olduğu notun ID'si (zorunlu)
- *           example: "64fbbf9e12ab34cd56ef7894"
- *         userId:
- *           type: string
- *           format: objectId
- *           description: Yorumu yazan kullanıcı ID'si (zorunlu)
- *           example: "64fbbf9e12ab34cd56ef7890"
- *         text:
- *           type: string
- *           description: Yorum metni (zorunlu)
- *           example: "Bu not çok faydalı oldu, teşekkür ederim!"
- *         likes:
- *           type: number
- *           description: Beğeni sayısı (varsayılan 0)
- *           example: 5
- *         dislikes:
- *           type: number
- *           description: Beğenmeme sayısı (varsayılan 0)
- *           example: 1
- *         reports:
- *           type: number
- *           description: Rapor sayısı (varsayılan 0)
- *           example: 0
- *         reactions:
- *           type: array
- *           description: Yorumla ilgili kullanıcı reaksiyonları (beğeni, beğenmeme, rapor) ve açıklamaları
  *           items:
  *             type: object
  *             properties:
  *               userId:
  *                 type: string
  *                 format: objectId
- *                 description: Tepki veren kullanıcı ID'si
- *                 example: "64fbbf9e12ab34cd56ef7890"
- *               type:
+ *               name:
  *                 type: string
- *                 enum: [like, dislike, report]
- *                 description: Tepki türü
- *                 example: "like"
- *               commentDescription:
- *                 type: string
- *                 description: Tepki açıklaması max 200 karakter (opsiyonel)
- *                 example: "Yorum çok faydalı"
- *               timestamp:
- *                 type: string
- *                 format: date-time
- *                 description: Tepki zamanı
- *                 example: "2025-09-05T12:30:00Z"
+ *         isRead:
+ *           type: boolean
+ *         lastUpdated:
+ *           type: string
+ *           format: date-time
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: Oluşturulma zamanı (otomatik)
  *         updatedAt:
  *           type: string
  *           format: date-time
- *           description: Güncellenme zamanı (otomatik)
- * 
- *     DepartmentCode:
- *       type: object
- *       required:
- *         - code
- *         - universityId
- *         - addedBy
- *       description: >
- *         Üniversitelere ait ders branş kodları bu modelde saklanır.
- *         Her bir kod bir üniversiteye bağlıdır.
- *         Kim tarafından eklendiği `addedBy` alanında tutulur.
- *         Kullanıcılar ya da adminler kod ekleyebilir.
- *         Aynı üniversitede aynı kod tekrar edemez (unique).
- *       properties:
- *         id:
- *           type: string
- *           format: objectId
- *           description: Kodun benzersiz ID’si
- *           example: "650e3f9d12ae23b7c7de99b2"
- *         code:
- *           type: string
- *           description: >
- *             Ders branş kodu örneğin: BLG, ENG, BIO. Kod büyük harfli olmalı ve 10 karakteri geçmemeli.
- *           example: "BLG"
- *         universityId:
- *           type: string
- *           format: objectId
- *           description: Kodun ait olduğu üniversite ID'si
- *           example: "64fbbf9e12ab34cd56ef7891"
- *         addedBy:
- *           type: string
- *           format: objectId
- *           description: Kodu ekleyen kullanıcının ID'si
- *           example: "64fbbf9e12ab34cd56ef7888"
- *         createdAt:
- *           type: string
- *           format: date-time
- *           description: Oluşturulma zamanı
- *           example: "2025-09-08T09:58:00.000Z"
- *         updatedAt:
- *           type: string
- *           format: date-time
- *           description: Son güncellenme zamanı
- *           example: "2025-09-08T10:10:00.000Z"
  *
- *     UserSuggestion:
+ *     Reaction:
  *       type: object
- *       required:
- *         - title
- *         - content
- *         - userId
- *       description: >
- *         Kullanıcıların site geliştirme için önerileri bu modelde saklanır.
- *         Admin tarafından görülebilir ve durum güncellenebilir.
+ *       description: MongoDB `Reaction` dokümanı.
  *       properties:
- *         id:
+ *         _id:
  *           type: string
  *           format: objectId
- *           description: Önerinin benzersiz ID'si
- *           example: "650e3f9d12ae23b7c7de99b3"
- *         title:
- *           type: string
- *           description: Öneri başlığı (maksimum 200 karakter)
- *           example: "Mobil uygulama geliştirin"
- *         content:
- *           type: string
- *           description: Öneri içeriği (maksimum 1000 karakter)
- *           example: "iOS ve Android için native uygulama olsa çok güzel olur. Push notification ile yeni notlar hakkında bilgilendirme yapılabilir."
  *         userId:
  *           type: string
  *           format: objectId
- *           description: Öneriyi gönderen kullanıcının ID'si
- *           example: "64fbbf9e12ab34cd56ef7888"
- *         status:
+ *         targetType:
  *           type: string
- *           enum: [Beklemede, Görüldü, İnceleniyor, Eklendi, Eklenmedi]
- *           description: Önerinin durumu
- *           example: "Beklemede"
- *         adminNotes:
- *           type: string
- *           description: Admin tarafından eklenen notlar (opsiyonel, maksimum 500 karakter)
- *           example: "Harika öneri! Teknik ekiple değerlendiriliyor."
- *         adminId:
+ *           enum: [notes, comments]
+ *         targetId:
  *           type: string
  *           format: objectId
- *           description: Son işlemi yapan admin ID'si (opsiyonel)
- *           example: "64fbbf9e12ab34cd56ef7999"
+ *         type:
+ *           type: string
+ *           enum: [like, dislike, report]
+ *         description:
+ *           type: string
+ *           nullable: true
+ *         timestamp:
+ *           type: string
+ *           format: date-time
  *         createdAt:
  *           type: string
  *           format: date-time
- *           description: Oluşturulma zamanı
- *           example: "2025-09-08T09:58:00.000Z"
  *         updatedAt:
  *           type: string
  *           format: date-time
- *           description: Son güncellenme zamanı
- *           example: "2025-09-08T10:10:00.000Z"
- */
-
-
-
-/**
- * @openapi
- * /admin/users:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Admin]
- *     summary: Kullanıcı listesini getir
- *     description: |
- *       Admin kullanıcılar; sayfalama, arama ve filtreleme parametreleriyle kullanıcı listesini çekebilir.
- *       - Admin hesaplar listeye dahil edilmez.
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Sayfa numarası
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *         description: Sayfa başına kullanıcı sayısı
- *       - in: query
- *         name: search
- *         schema:
+ *
+ *     UserSuggestion:
+ *       type: object
+ *       description: MongoDB `UserSuggestion` dokümanı.
+ *       properties:
+ *         _id:
  *           type: string
- *         description: İsim veya e-posta içerisinde arama yapar
- *       - in: query
- *         name: status
- *         schema:
+ *           format: objectId
+ *         title:
  *           type: string
- *           enum: [active, inactive]
- *         description: Kullanıcı aktif/pasif filtresi
- *       - in: query
- *         name: universityId
- *         schema:
- *           type: string
- *         description: Belirli bir üniversiteye göre filtreleme
- *     responses:
- *       200:
- *         description: Kullanıcı listesi döndürüldü
  *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 users:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       _id:
- *                         type: string
- *                       name:
- *                         type: string
- *                       email:
- *                         type: string
- *                       isActive:
- *                         type: boolean
- *                       role:
- *                         type: string
- *                       universityId:
- *                         type: object
- *                         nullable: true
- *                         properties:
- *                           _id:
- *                             type: string
- *                           name:
- *                             type: string
- *                           slug:
- *                             type: string
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     currentPage:
- *                       type: integer
- *                     totalPages:
- *                       type: integer
- *                     totalUsers:
- *                       type: integer
- *                     usersPerPage:
- *                       type: integer
- *       403:
- *         description: Yalnızca admin erişebilir
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /admin/users/{id}:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Admin]
- *     summary: Kullanıcı detaylarını getir
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
  *           type: string
- *         description: Kullanıcı ID
- *     responses:
- *       200:
- *         description: Kullanıcı detayları döndürüldü
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   type: object
- *                   description: Kullanıcı temel bilgileri
- *                 recentNotes:
- *                   type: array
- *                   description: Kullanıcının son 10 aktif notu
- *                   items:
- *                     type: object
- *                 recentComments:
- *                   type: array
- *                   description: Kullanıcının son 10 yorumu
- *                   items:
- *                     type: object
- *       403:
- *         description: Yalnızca admin erişebilir
- *       404:
- *         description: Kullanıcı bulunamadı
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /admin/users/{id}/status:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Admin]
- *     summary: Kullanıcı aktif/pasif durumunu güncelle
- *     description: Admin kullanıcılar, normal kullanıcıları aktifleştirebilir veya pasifleştirebilir. Admin hesaplar pasifleştirilemez.
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
+ *         userId:
  *           type: string
- *         description: Kullanıcı ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - isActive
- *             properties:
- *               isActive:
- *                 type: boolean
- *                 description: Kullanıcının yeni durumu (true = aktif, false = pasif)
- *                 example: false
- *     responses:
- *       200:
- *         description: Kullanıcı durumu güncellendi
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Kullanıcı pasifleştirildi"
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     isActive:
- *                       type: boolean
- *       400:
- *         description: Gönderilen isActive değeri geçersiz
- *       403:
- *         description: Yalnızca admin erişebilir veya admin kullanıcı banlanamaz
- *       404:
- *         description: Kullanıcı bulunamadı
- *       500:
- *         description: Sunucu hatası
- */
+ *           format: objectId
+ *         status:
+ *           type: string
+ *           enum: [Beklemede, Görüldü, İnceleniyor, Eklendi, Eklenmedi]
+ *         adminNotes:
+ *           type: string
+ *           nullable: true
+ *         adminId:
+ *           type: string
+ *           format: objectId
+ *           nullable: true
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+*/
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -951,6 +389,7 @@
 
 // ======================= AUTH ROUTES =======================
 // Bu bölüm kullanıcı kayıt ve giriş işlemleri için endpointleri kapsar.
+
 /**
  * @openapi
  * tags:
@@ -1021,6 +460,14 @@
  *         description: "Eksik veya hatalı alan (ör: üniversite ID/slug hatalı, e-posta domaini eşleşmiyor, şifre kurallara uymuyor, kullanıcı zaten var)"
  *       429:
  *         description: "Çok fazla deneme yapıldı (limit: 1 saatte 3 kayıt denemesi)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Çok fazla kayıt denemesi yapıldı. Lütfen 1 saat sonra tekrar deneyin."
  *       500:
  *         description: "Sunucu hatası"
  */
@@ -1123,7 +570,7 @@
  *                     totalComments:
  *                       type: integer
  *       401:
- *         description: JWT yok veya geçersiz
+ *         description: Token eksik veya kullanıcı doğrulanamadı
  *         content:
  *           application/json:
  *             schema:
@@ -1131,7 +578,17 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Kimlik doğrulama gerekli"
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
  *       404:
  *         description: Kullanıcı bulunamadı
  *       500:
@@ -1147,7 +604,8 @@
  *     tags: [Auth]
  *     summary: Profil bilgilerini güncelle
  *     description: |
- *       Kullanıcı isim, şifre, profil fotoğrafı, bölüm vb. alanlarını güncelleyebilir. En az bir alan gönderilmelidir.
+ *       Giriş yapmış kullanıcı; ad, profil fotoğrafı, hakkımda alanı, bölüm bilgisi, sosyal linkler veya bildirim tercihini güncelleyebilir.
+ *       En az bir alan (name, profilePic, aboutMe, department, socialLinks, notifications) gönderilmelidir.
  *     requestBody:
  *       required: true
  *       content:
@@ -1157,31 +615,38 @@
  *             properties:
  *               name:
  *                 type: string
- *                 description: 2-50 karakter aralığında olmalı; aynı isimler kullanılabilir
- *               password:
- *                 type: string
- *                 description: En az 6 karakter; en az 1 büyük harf, 1 küçük harf ve 1 rakam içermeli
+ *                 description: 2-50 karakter aralığında olmalı
+ *                 example: "Ali Yılmaz"
  *               profilePic:
  *                 type: string
- *                 description: Geçerli bir URL
+ *                 nullable: true
+ *                 description: Geçerli bir HTTP(S) URL'i veya boş bırakılabilir
+ *                 example: "https://example.com/avatar.png"
  *               aboutMe:
  *                 type: string
+ *                 nullable: true
  *                 description: Maksimum 500 karakter
+ *                 example: "3. sınıf bilgisayar mühendisliği öğrencisi"
  *               department:
  *                 type: string
+ *                 nullable: true
  *                 description: Maksimum 100 karakter
+ *                 example: "Bilgisayar Mühendisliği"
  *               socialLinks:
  *                 type: object
+ *                 description: Sosyal medya bağlantıları (opsiyonel alanlar)
  *                 properties:
  *                   linkedin:
  *                     type: string
+ *                     nullable: true
  *                     description: Geçerli bir LinkedIn URL'i
  *                   github:
  *                     type: string
+ *                     nullable: true
  *                     description: Geçerli bir GitHub URL'i
  *               notifications:
  *                 type: boolean
- *                 description: Bildirim alma tercihi
+ *                 description: Bildirim alma tercihi (varsayılan true)
  *     responses:
  *       200:
  *         description: Profil güncellendi
@@ -1222,400 +687,42 @@
  *                           nullable: true
  *                     notifications:
  *                       type: boolean
+ *       401:
+ *         description: Token eksik veya kullanıcı doğrulanamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Hesabınız pasif durumdadır."
  *       400:
  *         description: Geçersiz veri veya hiçbir alan gönderilmedi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Güncellenecek en az bir alan belirtmelisiniz"
  *       404:
  *         description: Kullanıcı bulunamadı
  *       500:
  *         description: Sunucu hatası
  */
 
-
-
-/**
- * @openapi
- * /auth/profileResetPassword:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Auth]
- *     summary: Profil şifresini güncelle
- *     description: |
- *       Giriş yapmış kullanıcı mevcut şifresini doğruladıktan sonra yeni şifre belirler.
- *       - Yeni şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir.
- *       - Yeni şifre mevcut şifreyle aynı olamaz.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - currentPassword
- *               - newPassword
- *             properties:
- *               currentPassword:
- *                 type: string
- *                 description: "Mevcut şifreniz"
- *                 example: "EskiSifre123"
- *               newPassword:
- *                 type: string
- *                 description: "Yeni şifre (güçlü şifre kurallarına uygun olmalı)"
- *                 example: "YeniSifre123"
- *     responses:
- *       200:
- *         description: Şifre güncellendi
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Şifre başarıyla güncellendi"
- *       400:
- *         description: "Geçersiz veri, eksik alan veya yeni şifre kurallara uymuyor"
- *       401:
- *         description: "Mevcut şifre yanlış"
- *       404:
- *         description: "Kullanıcı bulunamadı"
- *       500:
- *         description: "Sunucu hatası"
- */
-
-
-
-/**
- * @openapi
- * /auth/verify-email:
- *   get:
- *     tags: [Auth]
- *     summary: E-posta doğrulama
- *     description: |
- *       Kullanıcının e-posta adresine gönderilen doğrulama linkindeki token ile hesabı doğrular.
- *     parameters:
- *       - in: query
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *         description: "E-posta doğrulama tokeni"
- *     responses:
- *       200:
- *         description: "E-posta başarıyla doğrulandı"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "E-posta başarıyla doğrulandı."
- *       400:
- *         description: "Token geçersiz veya süresi dolmuş"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Token geçersiz veya süresi dolmuş."
- *       429:
- *         description: "Çok fazla istek (limit: 15 dakikada 3 şifre sıfırlama denemesi)"
- *       500:
- *         description: "Sunucu hatası"
- */
-
-
-
-/**
- * @openapi
- * /auth/resend-verification-email:
- *   post:
- *     tags: [Auth]
- *     summary: Doğrulama e-postasını yeniden gönder
- *     description: Daha önce kayıt olmuş ancak e-postasını doğrulamamış kullanıcıya yeni doğrulama bağlantısı gönderir.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 example: ogrenci@boun.edu.tr
- *     responses:
- *       200:
- *         description: Doğrulama e-postası gönderildi
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Doğrulama e-postası tekrar gönderildi."
- *       404:
- *         description: Kullanıcı bulunamadı
- *       429:
- *         description: "Çok fazla istek (limit: 5 dakikada 3 doğrulama maili)"
- *       500:
- *         description: Sunucu hatası
- */
-
-
-
-/**
- * @openapi
- * /auth/forgot-password:
- *   post:
- *     tags: [Auth]
- *     summary: Şifre sıfırlama bağlantısı gönder
- *     description: |
- *       Kullanıcının e-posta adresine şifre sıfırlama bağlantısı gönderilir.
- *       - Eğer e-posta kayıtlı değilse bile "başarılı" cevabı verilir (güvenlik nedeniyle).
- *       - Linkin geçerlilik süresi 1 saattir.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 example: ogrenci@boun.edu.tr
- *     responses:
- *       200:
- *         description: Mail gönderildi (varsa)
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Eğer hesap varsa sıfırlama maili gönderildi.
- *       429:
- *         description: "Çok fazla istek (limit: 15 dakikada 3 şifre sıfırlama talebi)"
- *       500:
- *         description: Sunucu hatası
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ======================= NOTIFICATION ROUTES =======================
-// Bu bölüm bildirim servisinin endpointlerini kapsar.
-/**
- * @openapi
- * tags:
- *   - name: Notifications
- *     description: Kullanıcı bildirimlerini listeleme, okuma ve silme işlemleri
- */
-
-/**
- * @openapi
- * /notifications:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notifications]
- *     summary: Bildirimleri listele
- *     description: Kullanıcının kendi bildirimlerini sayfalı şekilde döndürür.
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Sayfa numarası
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *         description: Sayfa başına sonuç sayısı
- *     responses:
- *       200:
- *         description: Bildirimler listelendi
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/NotificationListResponse'
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /notifications/unread-count:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notifications]
- *     summary: Okunmamış bildirim sayısını getir
- *     responses:
- *       200:
- *         description: Okunmamış bildirim sayısı döndürüldü
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 unreadCount:
- *                   type: integer
- *                   example: 5
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /notifications/{id}/read:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notifications]
- *     summary: Tek bildirimi okundu işaretle
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Bildirim ID'si
- *     responses:
- *       200:
- *         description: Bildirim okundu olarak güncellendi
- *       404:
- *         description: Bildirim bulunamadı
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /notifications/read-all:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notifications]
- *     summary: Tüm bildirimleri okundu işaretle
- *     responses:
- *       200:
- *         description: Okunmamış tüm bildirimler okundu işaretlendi
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Tüm bildirimler okundu işaretlendi"
- *                 updatedCount:
- *                   type: integer
- *                   example: 12
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /notifications/{id}:
- *   delete:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notifications]
- *     summary: Tek bildirimi sil
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Bildirim ID'si
- *     responses:
- *       200:
- *         description: Bildirim silindi
- *       404:
- *         description: Bildirim bulunamadı
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /notifications/read:
- *   delete:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notifications]
- *     summary: Okunmuş bildirimleri sil
- *     responses:
- *       200:
- *         description: Okunmuş bildirimler silindi
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Okunmuş bildirimler silindi"
- *                 deletedCount:
- *                   type: integer
- *                   example: 8
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /notifications/all:
- *   delete:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notifications]
- *     summary: Tüm bildirimleri sil
- *     responses:
- *       200:
- *         description: Tüm bildirimler silindi
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Tüm bildirimler silindi"
- *                 deletedCount:
- *                   type: integer
- *                   example: 22
- *       500:
- *         description: Sunucu hatası
- */
 
 
 /**
@@ -1699,6 +806,8 @@
  *         description: "Sunucu hatası"
  */
 
+
+
 /**
  * @openapi
  * /auth/reset-password:
@@ -1750,6 +859,677 @@
 
 
 
+/**
+ * @openapi
+ * /auth/profileResetPassword:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Auth]
+ *     summary: Profil şifresini güncelle
+ *     description: |
+ *       Giriş yapmış kullanıcı mevcut şifresini doğruladıktan sonra yeni şifre belirler.
+ *       - Yeni şifre en az 6 karakter olmalı, 1 büyük harf, 1 küçük harf ve 1 rakam içermelidir.
+ *       - Yeni şifre mevcut şifreyle aynı olamaz.
+ *       - Oran sınırlaması: 15 dakikada en fazla 3 şifre değişikliği isteği.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: "Mevcut şifreniz"
+ *                 example: "EskiSifre123"
+ *               newPassword:
+ *                 type: string
+ *                 description: "Yeni şifre (güçlü şifre kurallarına uygun olmalı)"
+ *                 example: "YeniSifre123"
+ *     responses:
+ *       200:
+ *         description: Şifre güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Şifre başarıyla güncellendi"
+ *       400:
+ *         description: "Geçersiz veri, eksik alan veya yeni şifre kurallara uymuyor"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yeni şifre eski şifrenizle aynı olamaz"
+ *       401:
+ *         description: "Mevcut şifre yanlış"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Mevcut şifre yanlış"
+ *       403:
+ *         description: "Token geçersiz veya hesap pasif"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       404:
+ *         description: "Kullanıcı bulunamadı"
+ *       429:
+ *         description: "Çok fazla şifre değiştirme isteği (15 dakikada 3 deneme)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Çok fazla şifre değiştirme isteği. Lütfen 15 dakika bekleyin."
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+
+
+/**
+ * @openapi
+ * /auth/verify-email:
+ *   get:
+ *     tags: [Auth]
+ *     summary: E-posta doğrulama
+ *     description: |
+ *       Kullanıcının e-posta adresine gönderilen doğrulama linkindeki token ile hesabı doğrular.
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "E-posta doğrulama tokeni"
+ *     responses:
+ *       200:
+ *         description: "E-posta başarıyla doğrulandı"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "E-posta başarıyla doğrulandı."
+ *       400:
+ *         description: "Token geçersiz veya süresi dolmuş"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Token geçersiz veya süresi dolmuş."
+ *       500:
+ *         description: "Sunucu hatası"
+ */
+
+
+
+/**
+ * @openapi
+ * /auth/resend-verification-email:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Doğrulama e-postasını yeniden gönder
+ *     description: Daha önce kayıt olmuş ancak e-postasını doğrulamamış kullanıcıya yeni doğrulama bağlantısı gönderir.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: ogrenci@boun.edu.tr
+ *     responses:
+ *       200:
+ *         description: Doğrulama e-postası gönderildi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Doğrulama e-postası tekrar gönderildi."
+ *       400:
+ *         description: Hesap zaten doğrulanmış
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Hesap zaten doğrulanmış."
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       429:
+ *         description: "Çok fazla istek (limit: 5 dakikada 3 doğrulama maili)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Çok fazla doğrulama maili isteği. Lütfen 5 dakika bekleyin."
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+
+
+/**
+ * @openapi
+ * /auth/forgot-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Şifre sıfırlama bağlantısı gönder
+ *     description: |
+ *       Kullanıcının e-posta adresine şifre sıfırlama bağlantısı gönderilir.
+ *       - Eğer e-posta kayıtlı değilse bile "başarılı" cevabı verilir (güvenlik nedeniyle).
+ *       - Linkin geçerlilik süresi 1 saattir.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: ogrenci@boun.edu.tr
+ *     responses:
+ *       200:
+ *         description: Mail gönderildi (varsa)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Eğer hesap varsa sıfırlama maili gönderildi.
+ *       400:
+ *         description: Geçersiz e-posta formatı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz email formatı"
+ *       429:
+ *         description: "Çok fazla istek (limit: 15 dakikada 3 şifre sıfırlama talebi)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Çok fazla şifre sıfırlama isteği. Lütfen 15 dakika bekleyin."
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================= NOTIFICATION ROUTES =======================
+// Bu bölüm bildirim servisinin endpointlerini kapsar.
+
+/**
+ * @openapi
+ * tags:
+ *   - name: Notifications
+ *     description: Kullanıcı bildirimlerini listeleme, okuma ve silme işlemleri
+ */
+
+/**
+ * @openapi
+ * /notifications:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Bildirimleri listele
+ *     description: Kullanıcının kendi bildirimlerini sayfalı şekilde döndürür.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: İstenen sayfa numarası
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 20
+ *         description: Sayfa başına dönecek kayıt sayısı
+ *     responses:
+ *       200:
+ *         description: Bildirimler listelendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notifications:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Notification'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                       example: 1
+ *                     totalPages:
+ *                       type: integer
+ *                       example: 5
+ *                     totalNotifications:
+ *                       type: integer
+ *                       example: 72
+ *                     unreadCount:
+ *                       type: integer
+ *                       example: 4
+ *                     hasNextPage:
+ *                       type: boolean
+ *                       example: true
+ *       401:
+ *         description: Token eksik veya gönderilmedi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       500:
+ *         description: Bildirimler getirilemedi
+ */
+
+/**
+ * @openapi
+ * /notifications/unread-count:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Okunmamış bildirim sayısını getir
+ *     responses:
+ *       200:
+ *         description: Okunmamış bildirim sayısı döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 unreadCount:
+ *                   type: integer
+ *                   example: 5
+ *       401:
+ *         description: Token eksik veya gönderilmedi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       500:
+ *         description: Sayı getirilemedi
+ */
+
+/**
+ * @openapi
+ * /notifications/{id}/read:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Tek bildirimi okundu işaretle
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bildirim ID'si
+ *     responses:
+ *       200:
+ *         description: Bildirim okundu olarak güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Okundu işaretlendi"
+ *                 notification:
+ *                   $ref: '#/components/schemas/Notification'
+ *       401:
+ *         description: Token eksik veya gönderilmedi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       404:
+ *         description: Bildirim bulunamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bildirim bulunamadı"
+ *       500:
+ *         description: İşlem başarısız
+ */
+
+/**
+ * @openapi
+ * /notifications/read-all:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Tüm bildirimleri okundu işaretle
+ *     responses:
+ *       200:
+ *         description: Okunmamış tüm bildirimler okundu işaretlendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Tüm bildirimler okundu işaretlendi"
+ *                 updatedCount:
+ *                   type: integer
+ *                   example: 12
+ *       401:
+ *         description: Token eksik veya gönderilmedi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       500:
+ *         description: İşlem başarısız
+ */
+
+/**
+ * @openapi
+ * /notifications/{id}:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Tek bildirimi sil
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bildirim ID'si
+ *     responses:
+ *       200:
+ *         description: Bildirim silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bildirim silindi"
+ *       401:
+ *         description: Token eksik veya gönderilmedi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       404:
+ *         description: Bildirim bulunamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bildirim bulunamadı"
+ *       500:
+ *         description: İşlem başarısız
+ */
+
+/**
+ * @openapi
+ * /notifications/read:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Okunmuş bildirimleri sil
+ *     responses:
+ *       200:
+ *         description: Okunmuş bildirimler silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Okunmuş bildirimler silindi"
+ *                 deletedCount:
+ *                   type: integer
+ *                   example: 8
+ *       401:
+ *         description: Token eksik veya gönderilmedi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       500:
+ *         description: İşlem başarısız
+ */
+
+/**
+ * @openapi
+ * /notifications/all:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notifications]
+ *     summary: Tüm bildirimleri sil
+ *     responses:
+ *       200:
+ *         description: Tüm bildirimler silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Tüm bildirimler silindi"
+ *                 deletedCount:
+ *                   type: integer
+ *                   example: 22
+ *       401:
+ *         description: Token eksik veya gönderilmedi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya hesap pasif
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       500:
+ *         description: İşlem başarısız
+ */
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1768,20 +1548,21 @@
 
 
 // ======================= ADMIN ROUTES =======================
+
 /**
  * @openapi
  * tags:
  *   - name: Admin
- *     description: Admin işlemleri (üniversite yönetimi, raporlanan içerikler, kullanıcı yönetimi, öneri yönetimi)
+ *     description: Admin işlemleri (üniversite, içerik, kullanıcı, öneri, ders ve bölüm kodu yönetimi)
  */
 
 /**
  * @openapi
- * /auth/admin-login:
+ * /admin/login:
  *   post:
  *     tags: [Auth]
- *     summary: Admin login
- *     description: Sadece admin kullanıcılar giriş yapabilir.
+ *     summary: Admin girişi yap
+ *     description: Sadece admin rolündeki kullanıcılar giriş yapabilir ve JWT alır.
  *     requestBody:
  *       required: true
  *       content:
@@ -1794,13 +1575,37 @@
  *             properties:
  *               email:
  *                 type: string
- *                 example: "admin@example.com"
+ *                 format: email
+ *                 example: admin@notkutusu.com
  *               password:
  *                 type: string
- *                 example: "Admin123"
+ *                 example: Admin123
  *     responses:
  *       200:
- *         description: Giriş başarılı
+ *         description: Admin girişi başarılı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Admin girişi başarılı"
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *       400:
+ *         description: Eksik email veya şifre
  *       401:
  *         description: Şifre yanlış
  *       403:
@@ -1809,7 +1614,6 @@
  *         description: Sunucu hatası
  */
 
-
 /**
  * @openapi
  * /admin/universities:
@@ -1817,10 +1621,8 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Yeni üniversite ekle (sadece admin)
- *     description: |
- *       - JWT gerekir.
- *       - Sadece admin rolündeki kullanıcılar bu işlemi yapabilir.
+ *     summary: Yeni üniversite ekle
+ *     description: Sadece admin rolündeki kullanıcılar üniversite ekleyebilir.
  *     requestBody:
  *       required: true
  *       content:
@@ -1845,7 +1647,7 @@
  *                 example: ["atilim.edu.tr"]
  *     responses:
  *       201:
- *         description: "Üniversite eklendi"
+ *         description: Üniversite eklendi
  *         content:
  *           application/json:
  *             schema:
@@ -1857,27 +1659,13 @@
  *                 university:
  *                   $ref: '#/components/schemas/University'
  *       400:
- *         description: "Eksik alan veya slug mevcut"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Tüm alanlar zorunludur."
+ *         description: Eksik alan veya slug mevcut
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Yalnızca admin erişebilir"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Yalnızca admin erişebilir"
+ *         description: Yalnızca admin erişebilir
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -1887,74 +1675,73 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Üniversiteyi güncelle (sadece admin)
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: "Üniversite ID"
+ *     summary: Üniversiteyi güncelle
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               emailDomains:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *     responses:
-*       200:
-*         description: "Üniversite güncellendi"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Üniversite güncellendi"
-*                 university:
-*                   $ref: '#/components/schemas/University'
-*       404:
-*         description: "Üniversite bulunamadı"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Üniversite bulunamadı"
- *
+ *       200:
+ *         description: Üniversite güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Üniversite güncellendi"
+ *                 university:
+ *                   $ref: '#/components/schemas/University'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /admin/universities/{id}:
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Üniversiteyi sil (sadece admin)
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
+ *     summary: Üniversiteyi sil
  *     responses:
-*       200:
-*         description: "Üniversite güncellendi"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Üniversite güncellendi"
-*                 university:
-*                   $ref: '#/components/schemas/University'
-*       404:
-*         description: "Üniversite bulunamadı"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Üniversite bulunamadı"
+ *       200:
+ *         description: Üniversite silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Üniversite silindi"
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Sunucu hatası
  */
-
 
 /**
  * @openapi
@@ -1964,35 +1751,9 @@
  *       - bearerAuth: []
  *     tags: [Admin]
  *     summary: Raporlanan notları listele
- *     description: reports > 0 olan tüm notları listeler (aktif ve pasif dahil)
- *     responses:
-*       200:
-*         description: "Raporlanan not listesi"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 notes:
-*                   type: array
-*                   items:
-*                     $ref: '#/components/schemas/Note'
- *       403:
- *         description: "Yalnızca admin erişebilir"
- */
-
-/**
- * @openapi
- * /admin/notes/inactive:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Admin]
- *     summary: Pasifleştirilmiş notları listele
- *     description: isActive = false olan notları listeler (15+ rapor nedeniyle otomatik pasifleştirilmiş)
  *     responses:
  *       200:
- *         description: "Pasif not listesi"
+ *         description: Raporlanan notlar döndürüldü
  *         content:
  *           application/json:
  *             schema:
@@ -2002,10 +1763,40 @@
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Note'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Yalnızca admin erişebilir"
+ *         description: Yalnızca admin erişebilir
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /admin/notes/inactive:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Pasif (isActive=false) notları listele
+ *     responses:
+ *       200:
+ *         description: Pasif notlar döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Note'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       500:
+ *         description: Sunucu hatası
  */
 
 /**
@@ -2015,21 +1806,10 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Pasif notu yeniden aktifleştir
- *     description: |
- *       Pasifleştirilmiş (isActive = false) bir notu yeniden aktif hale getirir.
- *       - isActive = true yapılır
- *       - reports = 0 sıfırlanır
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Not ID
+ *     summary: Notu yeniden aktifleştir
  *     responses:
  *       200:
- *         description: "Not aktifleştirildi"
+ *         description: Not aktifleştirildi ve raporları sıfırlandı
  *         content:
  *           application/json:
  *             schema:
@@ -2040,14 +1820,14 @@
  *                   example: "Not aktifleştirildi ve raporlar sıfırlandı"
  *                 note:
  *                   $ref: '#/components/schemas/Note'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Yalnızca admin erişebilir"
+ *         description: Yalnızca admin erişebilir
  *       404:
- *         description: "Not bulunamadı"
- *       429:
- *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
+ *         description: Not bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -2059,21 +1839,24 @@
  *     tags: [Admin]
  *     summary: Raporlanan yorumları listele
  *     responses:
-*       200:
-*         description: "Raporlanan yorum listesi"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 comments:
-*                   type: array
-*                   items:
-*                     $ref: '#/components/schemas/Comment'
+ *       200:
+ *         description: Raporlanan yorumlar döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Yalnızca admin erişebilir"
+ *         description: Yalnızca admin erişebilir
+ *       500:
+ *         description: Sunucu hatası
  */
-
 
 /**
  * @openapi
@@ -2082,36 +1865,27 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Not sil (admin)
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
+ *     summary: Notu admin olarak sil
  *     responses:
-*       200:
-*         description: "Not silindi"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Not admin tarafından silindi"
-*       404:
-*         description: "Not bulunamadı"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Not bulunamadı"
+ *       200:
+ *         description: Not silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Not admin tarafından silindi"
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       404:
+ *         description: Not bulunamadı
+ *       500:
+ *         description: Sunucu hatası
  */
-
 
 /**
  * @openapi
@@ -2120,86 +1894,93 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Yorum sil (admin)
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
+ *     summary: Yorumu admin olarak sil
  *     responses:
-*       200:
-*         description: "Not silindi"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Not admin tarafından silindi"
-*       404:
-*         description: "Not bulunamadı"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Not bulunamadı"
+ *       200:
+ *         description: Yorum silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yorum admin tarafından silindi"
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       404:
+ *         description: Yorum bulunamadı
+ *       500:
+ *         description: Sunucu hatası
  */
-
 
 /**
  * @openapi
- * /admin/users/{id}/ban:
- *   patch:
+ * /admin/users:
+ *   get:
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Kullanıcıyı banla
+ *     summary: Kullanıcı listesini getir
+ *     description: Arama, durum ve üniversite filtreleriyle kullanıcıları listeler; admin kullanıcılar hariç tutulur.
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
  *         schema:
  *           type: string
+ *         description: İsim veya e-posta içinde arar
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive]
+ *       - in: query
+ *         name: universityId
+ *         schema:
+ *           type: string
+ *           format: objectId
  *     responses:
-*       200:
-*         description: "Kullanıcı banlandı"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Kullanıcı banlandı"
-*                 user:
-*                   $ref: '#/components/schemas/User'
-*
-*       404:
-*         description: "Kullanıcı bulunamadı"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Kullanıcı bulunamadı"
+ *       200:
+ *         description: Kullanıcı listesi döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 pagination:
+ *                   type: object
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       500:
+ *         description: Sunucu hatası
  */
 
-
- /**
+/**
  * @openapi
- * /admin/users/{id}/unban:
- *   patch:
+ * /admin/users/{id}:
+ *   get:
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Kullanıcı banını kaldır
+ *     summary: Kullanıcı detaylarını getir
  *     parameters:
  *       - in: path
  *         name: id
@@ -2208,9 +1989,146 @@
  *           type: string
  *     responses:
  *       200:
- *         description: "Kullanıcı banı kaldırıldı"
+ *         description: Kullanıcı detayları döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 recentNotes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 recentComments:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
  *       404:
- *         description: "Kullanıcı bulunamadı"
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /admin/users/{id}/status:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Kullanıcı aktif/pasif durumunu güncelle
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isActive
+ *             properties:
+ *               isActive:
+ *                 type: boolean
+ *                 example: false
+ *     responses:
+ *       200:
+ *         description: Kullanıcı durumu güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Kullanıcı pasifleştirildi"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     isActive:
+ *                       type: boolean
+ *       400:
+ *         description: isActive boolean olmalıdır
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir veya admin kullanıcı banlanamaz
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /admin/users/{id}/ban:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Kullanıcıyı banla (geri uyum)
+ *     responses:
+ *       200:
+ *         description: Kullanıcı banlandı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Kullanıcı banlandı"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /admin/users/{id}/unban:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Kullanıcı banını kaldır (geri uyum)
+ *     responses:
+ *       200:
+ *         description: Kullanıcı banı kaldırıldı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Kullanıcı banı kaldırıldı"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
  */
 
 /**
@@ -2220,37 +2138,31 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Tüm önerileri listele
- *     description: |
- *       Admin tüm kullanıcı önerilerini listeleyebilir.
- *       Sayfalama, durum filtresi ve arama desteği mevcuttur.
+ *     summary: Kullanıcı önerilerini listele
+ *     description: Sayfalama, durum filtresi ve arama desteği sunar.
  *     parameters:
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Sayfa numarası
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Sayfa başına gösterilecek öneri sayısı
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
  *           enum: [Beklemede, Görüldü, İnceleniyor, Eklendi, Eklenmedi]
- *         description: Durum filtresi
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
- *         description: Başlık ve içerikte arama
  *     responses:
  *       200:
- *         description: "Öneri listesi"
+ *         description: Öneriler listelendi
  *         content:
  *           application/json:
  *             schema:
@@ -2258,30 +2170,16 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/UserSuggestion'
+ *                     type: object
  *                 pagination:
  *                   type: object
- *                   properties:
- *                     page:
- *                       type: integer
- *                       example: 1
- *                     limit:
- *                       type: integer
- *                       example: 10
- *                     total:
- *                       type: integer
- *                       example: 25
- *                     pages:
- *                       type: integer
- *                       example: 3
- *       403:
- *         description: "Yalnızca admin erişebilir"
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -2292,14 +2190,6 @@
  *       - bearerAuth: []
  *     tags: [Admin]
  *     summary: Öneri durumunu güncelle
- *     description: Admin öneri durumunu değiştirebilir ve not ekleyebilir
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Öneri ID
  *     requestBody:
  *       required: true
  *       content:
@@ -2312,14 +2202,12 @@
  *               status:
  *                 type: string
  *                 enum: [Beklemede, Görüldü, İnceleniyor, Eklendi, Eklenmedi]
- *                 example: "İnceleniyor"
  *               adminNotes:
  *                 type: string
- *                 maxLength: 500
- *                 example: "Harika öneri! Teknik ekiple değerlendiriliyor."
+ *                 description: Admin notu (opsiyonel)
  *     responses:
  *       200:
- *         description: "Öneri durumu güncellendi"
+ *         description: Öneri güncellendi
  *         content:
  *           application/json:
  *             schema:
@@ -2330,15 +2218,18 @@
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Öneri durumu başarıyla güncellendi."
  *                 data:
- *                   $ref: '#/components/schemas/UserSuggestion'
+ *                   type: object
  *       400:
- *         description: "Geçersiz durum değeri"
+ *         description: Geçersiz durum değeri
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
  *       404:
- *         description: "Öneri bulunamadı"
+ *         description: Öneri bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -2349,17 +2240,9 @@
  *       - bearerAuth: []
  *     tags: [Admin]
  *     summary: Öneriyi sil
- *     description: Admin herhangi bir öneriyi tamamen silebilir
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Öneri ID
  *     responses:
  *       200:
- *         description: "Öneri silindi"
+ *         description: Öneri silindi
  *         content:
  *           application/json:
  *             schema:
@@ -2370,11 +2253,14 @@
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Öneri başarıyla silindi."
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Yalnızca admin erişebilir
  *       404:
- *         description: "Öneri bulunamadı"
+ *         description: Öneri bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -2384,42 +2270,32 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Admin]
- *     summary: Admin - Search Bar ile not arama (Pagination)
- *     description: |
- *       Admin paneli için tasarlanmış arama endpoint'i.
- *       - Sadece title, description ve course code alanlarında arama yapar
- *       - Pagination desteği vardır (default: 15 sonuç/sayfa)
- *       - Admin tüm üniversitelerde arama yapabilir
- *       - Opsiyonel olarak universitySlug parametresi ile tek bir üniversitede arama yapılabilir
+ *     summary: Admin arama çubuğu ile not ara
  *     parameters:
  *       - in: query
  *         name: q
  *         required: true
  *         schema:
  *           type: string
- *         description: Arama terimi
- *         example: "algorithm"
+ *         description: Arama terimi (ders kodu, başlık veya açıklama)
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Sayfa numarası
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 15
- *         description: Sayfa başına sonuç sayısı
  *       - in: query
  *         name: universitySlug
  *         schema:
  *           type: string
- *         description: Üniversite slug değeri (opsiyonel, belirtilmezse tüm üniversitelerde arama yapar)
- *         example: "bogazici"
+ *         description: Belirli bir üniversiteyle sınırla (opsiyonel)
  *     responses:
  *       200:
- *         description: Arama sonuçları başarıyla getirildi
+ *         description: Arama sonuçları getirildi
  *         content:
  *           application/json:
  *             schema:
@@ -2431,114 +2307,204 @@
  *                     $ref: '#/components/schemas/Note'
  *                 pagination:
  *                   type: object
- *                   properties:
- *                     currentPage:
- *                       type: integer
- *                       example: 1
- *                     totalPages:
- *                       type: integer
- *                       example: 5
- *                     totalResults:
- *                       type: integer
- *                       example: 67
- *                     resultsPerPage:
- *                       type: integer
- *                       example: 15
- *                     hasNextPage:
- *                       type: boolean
- *                       example: true
- *                     hasPrevPage:
- *                       type: boolean
- *                       example: false
  *       400:
  *         description: Arama terimi gerekli
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Arama terimi gerekli."
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
  *         description: Yalnızca admin erişebilir
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Yalnızca admin erişebilir"
  *       404:
- *         description: Üniversite bulunamadı (universitySlug belirtildiğinde)
+ *         description: Üniversite bulunamadı (slug belirtildiğinde)
  *       500:
  *         description: Sunucu hatası
  */
 
 /**
  * @openapi
- * /{slug}/notes/latest:
- *   get:
+ * /admin/courses:
+ *   post:
  *     security:
  *       - bearerAuth: []
- *     tags: [Notes]
- *     summary: Son eklenen notları getir (keşfet)
- *     description: Belirtilen üniversitedeki en yeni notları sayfalı şekilde döner.
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *         description: Üniversite slug değeri
- *         example: "itu"
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Sayfa numarası
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *         description: Sayfa başına sonuç sayısı
+ *     tags: [Admin]
+ *     summary: Yeni ders kodu oluştur
+ *     description: Ders kodu admin kullanıcının üniversitesi üzerinde oluşturulur.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 example: "COMP101"
  *     responses:
- *       200:
- *         description: Son eklenen notlar listesi
+ *       201:
+ *         description: Ders oluşturuldu
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 notes:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/LatestNoteSummary'
- *                 pagination:
+ *                 message:
+ *                   type: string
+ *                   example: "Ders oluşturuldu"
+ *                 course:
  *                   type: object
- *                   properties:
- *                     currentPage:
- *                       type: integer
- *                       example: 1
- *                     totalPages:
- *                       type: integer
- *                       example: 7
- *                     totalNotes:
- *                       type: integer
- *                       example: 132
- *                     hasNextPage:
- *                       type: boolean
- *                       example: true
- *       403:
- *         description: Kullanıcının üniversitesi slug ile uyuşmazsa erişim reddedilir
- *       404:
- *         description: Üniversite bulunamadı
+ *       400:
+ *         description: Eksik kod veya ders zaten mevcut
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       500:
  *         description: Sunucu hatası
  */
+
+/**
+ * @openapi
+ * /admin/department-codes:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Yeni bölüm kodu ekle
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 example: "COMP"
+ *     responses:
+ *       201:
+ *         description: Kod eklendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Kod başarıyla eklendi."
+ *                 code:
+ *                   type: object
+ *       400:
+ *         description: Eksik kod veya kod zaten var
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /admin/department-codes:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Tüm bölüm kodlarını listele
+ *     responses:
+ *       200:
+ *         description: Kodlar listelendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 codes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       500:
+ *         description: Kodlar getirilemedi
+ */
+
+/**
+ * @openapi
+ * /admin/department-codes/{id}:
+ *   patch:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Bölüm kodunu güncelle
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 example: "COMP"
+ *     responses:
+ *       200:
+ *         description: Kod güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Kod güncellendi."
+ *                 code:
+ *                   type: object
+ *       400:
+ *         description: Yeni kod belirtilmedi
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       404:
+ *         description: Kod bulunamadı
+ *       500:
+ *         description: Kod güncellenemedi
+ */
+
+/**
+ * @openapi
+ * /admin/department-codes/{id}:
+ *   delete:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Admin]
+ *     summary: Bölüm kodunu sil
+ *     responses:
+ *       200:
+ *         description: Kod silindi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Kod silindi."
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       404:
+ *         description: Kod bulunamadı
+ *       500:
+ *         description: Kod silinemedi
+ */
+
+
+
+
+
+
+
+
 
 
 
@@ -2561,75 +2527,25 @@
 
 
 // ======================= COURSES ROUTES =======================
-// Bu bölüm ders ekleme ve listeleme işlemlerini kapsar.
+// Bu bölüm herkese açık kurs listesi ve kullanıcı üniversitesi özel kurs erişimlerini kapsar.
+
 /**
  * @openapi
  * tags:
  *   - name: Courses
- *     description: Ders yönetimi (oluşturma, listeleme, slug üzerinden erişim)
+ *     description: Dersleri listeleyen uç noktalar
  */
 
 /**
  * @openapi
  * /courses:
- *   post:
- *     security:
- *       - bearerAuth: []
- *     tags: [Courses]
- *     summary: Yeni ders ekle
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - code
- *             properties:
- *               code:
- *                 type: string
- *                 description: "Ders kodu (zorunlu, otomatik olarak COMP101E formatına normalize edilir)"
- *                 example: "COMP101E"
- *     responses:
-*       201:
-*         description: "Ders oluşturuldu"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Ders oluşturuldu"
-*                 course:
-*                   $ref: '#/components/schemas/Course'
-*       400:
-*         description: "Eksik veya hatalı alan"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Ders kodu zorunludur"
-*       500:
-*         description: "Sunucu hatası"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Sunucu hatası"
- *
  *   get:
  *     tags: [Courses]
- *     summary: Tüm dersleri listele (herkes erişebilir)
+ *     summary: Tüm dersleri listele
+ *     description: Herkese açık ders listesi; herhangi bir kimlik doğrulaması gerekmez.
  *     responses:
  *       200:
- *         description: "Ders listesi"
+ *         description: Ders listesi döndürüldü
  *         content:
  *           application/json:
  *             schema:
@@ -2637,15 +2553,15 @@
  *               items:
  *                 $ref: '#/components/schemas/Course'
  *       500:
-*         description: "Sunucu hatası"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Sunucu hatası"
+ *         description: Sunucu hatası
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Sunucu hatası"
  */
 
 /**
@@ -2658,33 +2574,45 @@
  *     summary: Kullanıcının üniversitesine ait dersleri getir
  *     responses:
  *       200:
- *         description: "Ders listesi"
+ *         description: Kullanıcının üniversitesine ait dersler döndürüldü
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Course'
-*       403:
-*         description: "Yetkisiz erişim"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Yetkisiz erişim"
-*       500:
-*         description: "Sunucu hatası"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Sunucu hatası"
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                   noteCount:
+ *                     type: integer
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Token geçersiz veya süresi dolmuş
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Geçersiz veya süresi dolmuş token."
+ *       500:
+ *         description: Sunucu hatası
  */
 
 /**
@@ -2694,54 +2622,68 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Courses]
- *     summary: Slug ile üniversiteye ait dersleri getir
+ *     summary: Belirli üniversite slug'ına ait dersleri getir
  *     parameters:
  *       - in: path
  *         name: slug
  *         required: true
  *         schema:
  *           type: string
- *         description: "Üniversite slug (zorunlu)"
+ *         description: Üniversite slug değeri
  *     responses:
  *       200:
- *         description: "Ders listesi"
+ *         description: Ders listesi döndürüldü
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Course'
-*       403:
-*         description: "Erişim izni yok"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Bu üniversiteye erişim izniniz yok."
-*       404:
-*         description: "Üniversite bulunamadı"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Üniversite bulunamadı."
-*       500:
-*         description: "Sunucu hatası"
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 message:
-*                   type: string
-*                   example: "Sunucu hatası"
+ *                 type: object
+ *                 properties:
+ *                   code:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ *                   noteCount:
+ *                     type: integer
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Yetkisiz erişim: Token eksik."
+ *       403:
+ *         description: Kullanıcının üniversitesi slug ile uyuşmuyor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bu üniversiteye erişim izniniz yok."
+ *       404:
+ *         description: Üniversite bulunamadı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Üniversite bulunamadı."
+ *       500:
+ *         description: Sunucu hatası
  */
+
+
+
+
+
 
 
 
@@ -2764,13 +2706,12 @@
 
 
 // ======================= NOTES ROUTES =======================
-// Bu bölüm not yükleme, listeleme, detay görüntüleme, slug ile filtreleme
-// ve beğeni/dislike/rapor/top-contributors/top-notes endpointlerini kapsar.
+
 /**
  * @openapi
  * tags:
  *   - name: Notes
- *     description: Not yükleme, listeleme, arama ve kullanıcı etkileşim işlemleri
+ *     description: Not yükleme, görüntüleme, arama ve keşif işlemleri
  */
 
 /**
@@ -2781,6 +2722,7 @@
  *       - bearerAuth: []
  *     tags: [Notes]
  *     summary: Yeni not yükle
+ *     description: Kullanıcılar Google Drive bağlantısı sağlayarak not yükleyebilir; bağlantı erişilebilirlik kontrolünden geçer.
  *     requestBody:
  *       required: true
  *       content:
@@ -2789,51 +2731,47 @@
  *             type: object
  *             required:
  *               - title
- *               - driveLink
  *               - courseFormat
+ *               - driveLink
  *             properties:
  *               title:
  *                 type: string
- *                 description: Not başlığı (zorunlu)
- *                 example: "Veritabanı final notları"
+ *                 example: Calculus I Vize Notları
  *               description:
  *                 type: string
- *                 description: Not açıklaması (opsiyonel)
- *                 example: "Final sınavında çıkabilecek konuların özeti"
+ *                 nullable: true
+ *                 example: Limit ve türev özetleri
  *               courseFormat:
  *                 type: string
- *                 enum: ["split", "single"]
- *                 description: "Ders kodu formatı. split = bölüm kodu + ders numarası, single = tek parça kod"
- *                 example: "split"
+ *                 enum: [split, single]
+ *                 example: split
  *               departmentCode:
  *                 type: string
- *                 description: "courseFormat=split için bölüm kodu (örn. COMP). Büyük-küçük harfe duyarsız, backend büyük harfe çevirir"
- *                 example: "COMP"
+ *                 description: split formatı için bölüm kodu
+ *                 example: COMP
  *               courseNumber:
  *                 type: string
- *                 description: "courseFormat=split için ders numarası (örn. 101E). Boşluk/tire otomatik temizlenir"
- *                 example: "101E"
+ *                 description: split formatı için ders numarası
+ *                 example: 101E
  *               fullCourseCode:
  *                 type: string
- *                 description: "courseFormat=single için tam ders kodu (örn. 1505001). Boşluk/tire otomatik temizlenir"
- *                 example: "1505001"
+ *                 description: single formatı için tam ders kodu
+ *                 example: 1505001
  *               instructor:
  *                 type: string
- *                 description: Dersi veren öğretim üyesi (opsiyonel)
- *                 example: "Prof. Dr. Ayşe Yılmaz"
+ *                 nullable: true
+ *                 example: Dr. Ayşe Yılmaz
  *               driveLink:
  *                 type: string
- *                 format: uri
- *                 description: Google Drive / bulut linki (zorunlu)
- *                 example: "https://drive.google.com/file/abc123"
+ *                 example: https://drive.google.com/file/d/abc123/view
  *               year:
  *                 type: string
- *                 description: Akademik yıl bilgisi (opsiyonel, front-end free text)
- *                 example: "2024/2025"
+ *                 nullable: true
+ *                 example: 2023 Güz
  *               semester:
  *                 type: string
- *                 description: Dönem bilgisi (opsiyonel, Güz/Bahar vb.)
- *                 example: "Güz"
+ *                 nullable: true
+ *                 example: Güz
  *     responses:
  *       201:
  *         description: Not başarıyla yüklendi
@@ -2844,58 +2782,26 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Not başarıyla yüklendi"
+ *                   example: Not başarıyla yüklendi
  *                 note:
  *                   $ref: '#/components/schemas/Note'
  *                 course:
  *                   type: object
- *                   description: Notun bağlandığı ders özeti
  *                   properties:
- *                     id:
- *                       type: string
- *                       example: "64fbbf9e12ab34cd56ef7893"
  *                     code:
  *                       type: string
- *                       example: "COMP101E"
+ *                     id:
+ *                       type: string
  *       400:
- *         description: Eksik veya hatalı alan
+ *         description: Alan validasyonları veya erişilemeyen Drive bağlantısı
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz veya süresi dolmuş
  *       409:
- *         description: Aynı ders kodu için yarışan istek (duplicate key)
+ *         description: Ders zaten mevcut (nadir durum)
  *       500:
  *         description: Not yüklenemedi
- */
-
-/**
- * @openapi
- * /{slug}/notes:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notes]
- *     summary: Bir üniversitenin tüm aktif notlarını listele
- *     description: |
- *       Verilen `slug` değerine sahip üniversiteye ait tüm aktif notları döndürür.
- *       İçeride ders ID'si parametre olarak iletilmez; belirli bir ders için not almak isterseniz `/{slug}/courses/{courseId}/notes` endpointini kullanın.
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *         description: Üniversite slug değeri (örn. `itu`)
- *     responses:
- *       200:
- *         description: Notlar listelendi
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Note'
- *       403:
- *         description: Token'daki üniversite slug ile uyuşmazsa erişim reddedilir
- *       404:
- *         description: Üniversite bulunamadı
  */
 
 /**
@@ -2912,32 +2818,72 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Not ID (zorunlu)
  *     responses:
  *       200:
- *         description: Not bulundu
+ *         description: Not detayları döndürüldü (kullanıcının reaction bilgisi dahil)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Note'
+ *               type: object
+ *               properties:
+ *                 _id:
+ *                   type: string
+ *                 title:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                   nullable: true
+ *                 instructor:
+ *                   type: string
+ *                   nullable: true
+ *                 year:
+ *                   type: string
+ *                   nullable: true
+ *                 driveLink:
+ *                   type: string
+ *                 likes:
+ *                   type: integer
+ *                 dislikes:
+ *                   type: integer
+ *                 reports:
+ *                   type: integer
+ *                 viewCount:
+ *                   type: integer
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 myReaction:
+ *                   type: object
+ *                   nullable: true
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                       nullable: true
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: Yetki yok
+ *         description: Not farklı bir üniversiteye ait
  *       404:
- *         description: Not bulunamadı
- *
+ *         description: Not bulunamadı veya pasif
+ *       500:
+ *         description: Not getirilemedi
  *   patch:
  *     security:
  *       - bearerAuth: []
  *     tags: [Notes]
  *     summary: Notu güncelle
- *     description: Sadece notu oluşturan kullanıcı kendi notunu güncelleyebilir. En az bir alan gönderilmelidir.
+ *     description: Sadece notu oluşturan kullanıcı ve yalnızca aktif notlar güncellenebilir.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Güncellenecek not ID'si
  *     requestBody:
  *       required: true
  *       content:
@@ -2947,22 +2893,16 @@
  *             properties:
  *               title:
  *                 type: string
- *                 description: 3-100 karakter arasında olmalıdır
  *               description:
  *                 type: string
- *                 description: Not açıklaması (opsiyonel)
  *               instructor:
  *                 type: string
- *                 description: Öğretim görevlisi bilgisi
  *               year:
  *                 type: string
- *                 description: Yıl bilgisi (örn. 2023/2024)
  *               semester:
  *                 type: string
- *                 description: Dönem bilgisi (örn. Güz)
  *               driveLink:
  *                 type: string
- *                 description: "Geçerli bir Google Drive linki (https://drive.google.com/ ile başlamalı)"
  *     responses:
  *       200:
  *         description: Not güncellendi
@@ -2973,44 +2913,31 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Not başarıyla güncellendi"
+ *                   example: Not başarıyla güncellendi
  *                 note:
  *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     title:
- *                       type: string
- *                     description:
- *                       type: string
- *                     instructor:
- *                       type: string
- *                     year:
- *                       type: string
- *                     driveLink:
- *                       type: string
  *       400:
- *         description: Gönderilen veriler geçersiz veya hiçbir alan sağlanmadı
+ *         description: Geçersiz veya eksik alan
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: Kullanıcının bu notu güncelleme yetkisi yok veya not pasif
+ *         description: Not size ait değil, üniversite eşleşmiyor veya not pasif
  *       404:
  *         description: Not bulunamadı
  *       500:
- *         description: Sunucu hatası
- *
+ *         description: Not güncellenemedi
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     tags: [Notes]
- *     summary: Notu sil (pasifleştir)
- *     description: Not sahibi notunu pasif hâle getirir. İşlem soft-delete olarak gerçekleşir.
+ *     summary: Notu pasifleştir
+ *     description: Not silme işlemi soft-delete olarak gerçekleştirilir; admin panelinde görünür kalır.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Silinecek not ID'si
  *     responses:
  *       200:
  *         description: Not pasifleştirildi
@@ -3021,17 +2948,52 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Not pasifleştirildi (admin panelde görünmeye devam edecek)"
+ *                   example: Not pasifleştirildi (admin panelde görünmeye devam edecek)
  *                 noteId:
  *                   type: string
  *       400:
- *         description: Not zaten pasif durumda
+ *         description: Not zaten pasif
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: Kullanıcının bu notu silme yetkisi yok
+ *         description: Not size ait değil veya üniversite eşleşmiyor
  *       404:
  *         description: Not bulunamadı
  *       500:
- *         description: Sunucu hatası
+ *         description: Not silinemedi
+ */
+
+/**
+ * @openapi
+ * /{slug}/notes:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notes]
+ *     summary: Üniversite slug'ına göre notları listele
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Not listesi döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Note'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Kullanıcının üniversitesi slug ile uyuşmuyor
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Notlar listelenemedi
  */
 
 /**
@@ -3041,7 +3003,7 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Notes]
- *     summary: Belirli üniversite ve ders için notları getir
+ *     summary: Belirli kurs için notları listele
  *     parameters:
  *       - in: path
  *         name: slug
@@ -3055,131 +3017,21 @@
  *           type: string
  *     responses:
  *       200:
- *         description: Not listesi
+ *         description: Kursa ait notlar döndürüldü
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Note'
- */
-
-/**
- * @openapi
- * /notes/{id}/like:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notes]
- *     summary: Notu beğen
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               processDescription:
- *                 type: string
- *                 example: "Çok faydalı not"
- *     responses:
- *       200:
- *         description: Beğeni eklendi
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Kullanıcının üniversitesi slug ile uyuşmuyor
  *       404:
- *         description: Not bulunamadı
- *       429:
- *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
+ *         description: Üniversite bulunamadı
  *       500:
- *         description: İşlem başarısız
- */
-
-/**
- * @openapi
- * /notes/{id}/dislike:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notes]
- *     summary: Notu beğenme
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               processDescription:
- *                 type: string
- *                 example: "Yanıltıcı içerik"
- *     responses:
- *       200:
- *         description: Beğenmeme eklendi
- *       404:
- *         description: Not bulunamadı
- *       429:
- *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
- *       500:
- *         description: İşlem başarısız
- */
-
-/**
- * @openapi
- * /notes/{id}/report:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Notes]
- *     summary: Notu raporla
- *     description: |
- *       Notu raporlar. Eğer toplam rapor sayısı 15 veya daha fazla olursa not otomatik olarak pasifleştirilir (isActive = false).
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               processDescription:
- *                 type: string
- *                 example: "Uygunsuz içerik"
- *     responses:
- *       200:
- *         description: Rapor eklendi
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Raporlama işlemi tamamlandı"
- *                 reports:
- *                   type: number
- *                   example: 10
- *                 isActive:
- *                   type: boolean
- *                   example: false
- *       404:
- *         description: Not bulunamadı
- *       429:
- *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
- *       500:
- *         description: İşlem başarısız
+ *         description: Notlar listelenemedi
  */
 
 /**
@@ -3190,44 +3042,43 @@
  *       - bearerAuth: []
  *     tags: [Notes]
  *     summary: En çok katkı sağlayan kullanıcıları getir
- *     description: Belirtilen üniversite slug'ı için en fazla not yükleyen kullanıcıları döner.
  *     parameters:
  *       - in: path
  *         name: slug
  *         required: true
  *         schema:
  *           type: string
- *         description: Üniversite slug değeri
- *         example: "bogazici"
  *     responses:
  *       200:
- *         description: Liste başarıyla getirildi
+ *         description: En fazla not yükleyen kullanıcılar
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/TopContributorSummary'
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                   profilePic:
+ *                     type: string
+ *                     nullable: true
+ *                   score:
+ *                     type: integer
+ *                   noteCount:
+ *                     type: integer
+ *                   totalLikes:
+ *                     type: integer
+ *                   totalDislikes:
+ *                     type: integer
+ *                   totalReports:
+ *                     type: integer
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       404:
  *         description: Üniversite bulunamadı
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Üniversite bulunamadı."
  *       500:
  *         description: Sunucu hatası
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Sunucu hatası"
  */
 
 /**
@@ -3237,55 +3088,48 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Notes]
- *     summary: En popüler notları getir
- *     description: Belirtilen üniversitedeki en çok beğeni almış aktif notları döner.
+ *     summary: En çok beğenilen notları getir
  *     parameters:
  *       - in: path
  *         name: slug
  *         required: true
  *         schema:
  *           type: string
- *         description: Üniversite slug değeri
- *         example: "itu"
  *     responses:
  *       200:
- *         description: Liste başarıyla getirildi
+ *         description: Popüler notlar döndürüldü
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/PopularNoteSummary'
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   title:
+ *                     type: string
+ *                   likes:
+ *                     type: integer
+ *                   dislikes:
+ *                     type: integer
+ *                   reports:
+ *                     type: integer
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
+ *                   course:
+ *                     type: object
+ *                   uploader:
+ *                     type: object
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: Kullanıcının bu üniversiteye erişim izni yok
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Bu üniversiteye erişim izniniz yok."
+ *         description: Kullanıcının üniversitesi slug ile uyuşmuyor
  *       404:
  *         description: Üniversite bulunamadı
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Üniversite bulunamadı."
  *       500:
- *         description: Sunucu hatası
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Popüler notlar getirilemedi"
+ *         description: Notlar getirilemedi
  */
 
 /**
@@ -3295,8 +3139,7 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Notes]
- *     summary: Not arama işlemi
- *     description: Belirtilen üniversitede başlık, açıklama, öğretim üyesi, dönem, ders veya yükleyen kişi bilgilerine göre not araması yapar.
+ *     summary: Üniversite içerisinde not ara
  *     parameters:
  *       - in: path
  *         name: slug
@@ -3308,45 +3151,26 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Arama kelimesi (en az 1 karakter)
- *         example: "database"
+ *         description: Aranacak anahtar kelime
  *     responses:
  *       200:
  *         description: Arama sonuçları
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/NoteSearchResponse'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Note'
  *       400:
- *         description: Arama terimi gerekli veya geçersiz
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Arama terimi gerekli."
+ *         description: Arama terimi gerekli
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: Kullanıcının bu üniversiteye erişim izni yok
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Bu üniversiteye erişim izniniz yok."
+ *         description: Kullanıcının üniversitesi slug ile uyuşmuyor
+ *       404:
+ *         description: Üniversite bulunamadı
  *       500:
- *         description: Sunucu hatası
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Sunucu hatası"
+ *         description: Notlar listelenemedi
  */
 
 /**
@@ -3356,42 +3180,31 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Notes]
- *     summary: Search Bar ile not arama (Pagination)
- *     description: |
- *       Frontend search bar'ından kullanılmak üzere tasarlanmış arama endpoint'i.
- *       - Sadece title, description ve course code alanlarında arama yapar
- *       - Pagination desteği vardır (default: 15 sonuç/sayfa)
- *       - Kullanıcı sadece kendi üniversitesindeki notları arayabilir
+ *     summary: Arama çubuğu ile not ara (sayfalı)
  *     parameters:
  *       - in: path
  *         name: slug
  *         required: true
  *         schema:
  *           type: string
- *         description: Üniversite slug değeri
- *         example: "bogazici"
  *       - in: query
  *         name: q
  *         required: true
  *         schema:
  *           type: string
- *         description: Arama terimi
- *         example: "algorithm"
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Sayfa numarası
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 15
- *         description: Sayfa başına sonuç sayısı
  *     responses:
  *       200:
- *         description: Arama sonuçları başarıyla getirildi
+ *         description: Arama sonuçları ve sayfalama bilgisi döndürüldü
  *         content:
  *           application/json:
  *             schema:
@@ -3406,47 +3219,114 @@
  *                   properties:
  *                     currentPage:
  *                       type: integer
- *                       example: 1
  *                     totalPages:
  *                       type: integer
- *                       example: 5
  *                     totalResults:
  *                       type: integer
- *                       example: 67
  *                     resultsPerPage:
  *                       type: integer
- *                       example: 15
  *                     hasNextPage:
  *                       type: boolean
- *                       example: true
  *                     hasPrevPage:
  *                       type: boolean
- *                       example: false
  *       400:
  *         description: Arama terimi gerekli
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Arama terimi gerekli."
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: Üniversiteye erişim izni yok
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Bu üniversiteye erişim izniniz yok."
+ *         description: Kullanıcının üniversitesi slug ile uyuşmuyor
  *       404:
  *         description: Üniversite bulunamadı
  *       500:
  *         description: Sunucu hatası
  */
+
+/**
+ * @openapi
+ * /{slug}/notes/latest:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Notes]
+ *     summary: Son eklenen notları getir (keşfet)
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Son eklenen notlar döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                       courseCode:
+ *                         type: string
+ *                       courseType:
+ *                         type: string
+ *                       instructor:
+ *                         type: string
+ *                         nullable: true
+ *                       semester:
+ *                         type: string
+ *                       uploadDate:
+ *                         type: string
+ *                         format: date-time
+ *                       driveLink:
+ *                         type: string
+ *                       uploadedBy:
+ *                         type: string
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     totalNotes:
+ *                       type: integer
+ *                     hasNextPage:
+ *                       type: boolean
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Kullanıcının üniversitesi slug ile uyuşmuyor
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Notlar getirilemedi
+ */
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3473,6 +3353,7 @@
 
 // ======================= UNIVERSITIES ROUTES =======================
 // Bu bölüm üniversite işlemlerini kapsar.
+
 /**
  * @openapi
  * tags:
@@ -3702,13 +3583,22 @@
 
 
 
+
+
+
+
+
+
+
+
 // ======================= COMMENTS ROUTES =======================
-// Bu bölüm notlara yorum ekleme, listeleme ve yorumlara etkileşim işlemlerini kapsar.
+// Bu bölüm notlara yorum ekleme, listeleme ve silme işlemlerini kapsar.
+
 /**
  * @openapi
  * tags:
  *   - name: Comments
- *     description: Notlara yapılan yorumlar ve yorum etkileşimleri
+ *     description: Not yorumları ve ilgili işlemler
  */
 
 /**
@@ -3726,23 +3616,24 @@
  *         schema:
  *           type: string
  *           format: objectId
- *         description: "Not ID (zorunlu)"
+ *         description: Not ID
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - text
  *             properties:
  *               text:
- *                   type: string
- *                   maxLength: 350
- *                   example: "Bu not gerçekten çok faydalı oldu, teşekkürler!"
- *                   description: "Yorum metni (maksimum 350 karakter)"
- *                   required: true
+ *                 type: string
+ *                 description: Yorum metni (maksimum 350 karakter)
+ *                 maxLength: 350
+ *                 example: Bu not gerçekten çok faydalı oldu, teşekkürler!
  *     responses:
  *       201:
- *         description: "Yorum başarıyla eklendi"
+ *         description: Yorum eklendi
  *         content:
  *           application/json:
  *             schema:
@@ -3750,23 +3641,31 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Yorum eklendi"
+ *                   example: Yorum eklendi
  *                 comment:
  *                   $ref: '#/components/schemas/Comment'
  *       400:
- *         description: "En fazla 350 karakter olabilir"
+ *         description: Yorum metni eksik veya limit aşıldı
+ *       401:
+*         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Bu nota yorum yapma yetkiniz yok"
+ *         description: Bu nota yorum yapma yetkiniz yok
  *       404:
- *         description: "Not bulunamadı"
+ *         description: Not bulunamadı
+ *       429:
+ *         description: Çok fazla istek (rate limit)
  *       500:
- *         description: "Sunucu hatası"
- *
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /notes/{noteId}/comments:
  *   get:
  *     security:
  *       - bearerAuth: []
  *     tags: [Comments]
- *     summary: Bir notun tüm yorumlarını getir
+ *     summary: Bir notun yorumlarını listele
  *     parameters:
  *       - in: path
  *         name: noteId
@@ -3774,10 +3673,10 @@
  *         schema:
  *           type: string
  *           format: objectId
- *         description: "Not ID (zorunlu)"
+ *         description: Not ID
  *     responses:
  *       200:
- *         description: "Yorum listesi"
+ *         description: Yorum listesi döndürüldü
  *         content:
  *           application/json:
  *             schema:
@@ -3787,12 +3686,14 @@
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Bu nota erişim izniniz yok"
+ *         description: Bu nota erişim izniniz yok
  *       404:
- *         description: "Not bulunamadı"
+ *         description: Not bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -3803,7 +3704,7 @@
  *       - bearerAuth: []
  *     tags: [Comments]
  *     summary: Yorumu sil
- *     description: "Sadece yorumu ekleyen kullanıcı (veya ileride admin) kendi yorumunu silebilir."
+ *     description: Sadece yorumu ekleyen kullanıcı kendi yorumunu silebilir.
  *     parameters:
  *       - in: path
  *         name: id
@@ -3811,10 +3712,10 @@
  *         schema:
  *           type: string
  *           format: objectId
- *         description: "Silinecek yorumun ID'si"
+ *         description: Yorum ID
  *     responses:
  *       200:
- *         description: "Yorum başarıyla silindi"
+ *         description: Yorum silindi
  *         content:
  *           application/json:
  *             schema:
@@ -3822,170 +3723,29 @@
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Yorum silindi"
+ *                   example: Yorum silindi
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Bu yorumu silme yetkiniz yok"
+ *         description: Sadece kendi yorumunuzu silebilirsiniz
  *       404:
- *         description: "Yorum bulunamadı"
+ *         description: Yorum bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
-/**
- * @openapi
- * /comments/{id}/like:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Comments]
- *     summary: Yorumu beğen
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: objectId
- *         description: "Yorum ID (zorunlu)"
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               commentDescription:
- *                 type: string
- *                 example: "Gerçekten faydalı bir yorum"
- *     responses:
- *       200:
- *         description: "Beğeni eklendi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Yorum beğenildi"
- *                 likes:
- *                   type: number
- *                   example: 4
- *       400:
- *         description: "Zaten beğenilmiş"
- *       403:
- *         description: "Bu yoruma erişim yetkiniz yok"
- *       404:
- *         description: "Yorum bulunamadı"
- *       429:
- *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
- *       500:
- *         description: "İşlem başarısız"
- */
 
-/**
- * @openapi
- * /comments/{id}/dislike:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Comments]
- *     summary: Yorumu beğenmeme
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: objectId
- *         description: "Yorum ID (zorunlu)"
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               commentDescription:
- *                 type: string
- *                 example: "Bilgi eksik veya yanıltıcı"
- *     responses:
- *       200:
- *         description: "Beğenmeme eklendi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Yorum beğenilmedi"
- *                 dislikes:
- *                   type: number
- *                   example: 1
- *       400:
- *         description: "Zaten beğenmeme yapılmış"
- *       403:
- *         description: "Bu yoruma erişim yetkiniz yok"
- *       404:
- *         description: "Yorum bulunamadı"
- *       429:
- *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
- *       500:
- *         description: "İşlem başarısız"
- */
 
-/**
- * @openapi
- * /comments/{id}/report:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [Comments]
- *     summary: Yorumu raporla
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *           format: objectId
- *         description: "Yorum ID (zorunlu)"
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               commentDescription:
- *                 type: string
- *                 example: "Uygunsuz içerik"
- *     responses:
- *       200:
- *         description: "Rapor eklendi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Yorum raporlandı"
- *                 reports:
- *                   type: number
- *                   example: 1
- *       400:
- *         description: "Zaten raporlanmış"
- *       403:
- *         description: "Bu yoruma erişim yetkiniz yok"
- *       404:
- *         description: "Yorum bulunamadı"
- *       429:
- *         description: "Çok fazla istek (limit: 1 dakikada 20 etkileşim)"
- *       500:
- *         description: "İşlem başarısız"
-*/
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4005,11 +3765,12 @@
 
 
 // ======================= USERS ROUTES =======================
+
 /**
  * @openapi
  * tags:
  *   - name: Users
- *     description: Kullanıcı profilleri ve istatistikleri
+ *     description: Kullanıcı profilleri, şifre güncelleme ve kişisel içerik listeleme
  */
 
 /**
@@ -4020,24 +3781,24 @@
  *       - bearerAuth: []
  *     tags: [Users]
  *     summary: Kullanıcı profil bilgilerini getir
- *     description: "Sadece aynı üniversiteye ait kullanıcılar profillere erişebilir."
+ *     description: Sadece aynı üniversiteye ait kullanıcılar diğer kullanıcıların profillerini görebilir.
  *     parameters:
  *       - in: path
  *         name: slug
  *         required: true
  *         schema:
  *           type: string
- *         description: "Üniversitenin slug değeri (örnek: bogazici)"
+ *         description: Üniversite slug değeri
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
  *           format: objectId
- *         description: "Kullanıcı ID (zorunlu)"
+ *         description: Kullanıcı ID
  *     responses:
  *       200:
- *         description: "Kullanıcı profili bilgileri"
+ *         description: Kullanıcı profil bilgileri
  *         content:
  *           application/json:
  *             schema:
@@ -4045,52 +3806,39 @@
  *               properties:
  *                 name:
  *                   type: string
- *                   example: "Ömer"
  *                 profilePic:
  *                   type: string
- *                   example: "https://res.cloudinary.com/.../avatar.jpg"
+ *                   nullable: true
  *                 score:
- *                   type: number
- *                   example: 42
+ *                   type: integer
  *                 aboutMe:
  *                   type: string
- *                   example: "3. sınıf bilgisayar mühendisliği öğrencisi"
+ *                   nullable: true
  *                 department:
  *                   type: string
- *                   example: "Bilgisayar Mühendisliği"
+ *                   nullable: true
  *                 socialLinks:
  *                   type: object
- *                   properties:
- *                     linkedin:
- *                       type: string
- *                       example: "https://linkedin.com/in/kullanici"
- *                     github:
- *                       type: string
- *                       example: "https://github.com/kullanici"
  *                 notifications:
  *                   type: boolean
- *                   example: true
  *                 noteCount:
- *                   type: number
- *                   example: 5
+ *                   type: integer
  *                 commentCount:
- *                   type: number
- *                   example: 12
+ *                   type: integer
  *                 totalLikes:
- *                   type: number
- *                   example: 34
+ *                   type: integer
  *                 totalDislikes:
- *                   type: number
- *                   example: 2
+ *                   type: integer
  *                 totalReports:
- *                   type: number
- *                   example: 1
+ *                   type: integer
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Bu üniversiteye erişim izniniz yok"
+ *         description: Bu kullanıcıya erişim yetkiniz yok
  *       404:
- *         description: "Kullanıcı veya üniversite bulunamadı"
+ *         description: Kullanıcı veya üniversite bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -4101,7 +3849,7 @@
  *       - bearerAuth: []
  *     tags: [Users]
  *     summary: Kullanıcı profilini güncelle
- *     description: "Sadece kullanıcı kendi profilini güncelleyebilir. Şifre değiştirmek için oldPassword, newPassword ve confirmPassword alanları gerekir. Ayrıca şifre Minimum 6 karakter En az 1 büyük harf En az 1 küçük harf En az 1 rakam"
+ *     description: Sadece kullanıcı kendi profilini güncelleyebilir; şifre değiştirirken oldPassword/newPassword/confirmPassword alanları gereklidir.
  *     parameters:
  *       - in: path
  *         name: slug
@@ -4123,48 +3871,45 @@
  *             properties:
  *               name:
  *                 type: string
- *                 example: "YeniKullaniciAdi"
  *               profilePic:
  *                 type: string
- *                 example: "https://example.com/avatar.png"
  *               aboutMe:
  *                 type: string
- *                 example: "3. sınıf yazılım mühendisliği öğrencisiyim"
  *               department:
  *                 type: string
- *                 example: "Bilgisayar Mühendisliği"
  *               socialLinks:
  *                 type: object
- *                 properties:
- *                   linkedin:
- *                     type: string
- *                     example: "https://linkedin.com/in/kullanici"
- *                   github:
- *                     type: string
- *                     example: "https://github.com/kullanici"
  *               notifications:
  *                 type: boolean
- *                 example: true
  *               oldPassword:
  *                 type: string
- *                 example: "EskiSifre123"
  *               newPassword:
  *                 type: string
- *                 example: "YeniSifre123"
  *               confirmPassword:
  *                 type: string
- *                 example: "YeniSifre123"
  *     responses:
  *       200:
- *         description: "Profil başarıyla güncellendi"
+ *         description: Profil güncellendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Profil güncellendi
+ *                 user:
+ *                   type: object
  *       400:
- *         description: "Eksik veya hatalı parametre"
+ *         description: Eksik veya hatalı parametre
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Yetkisiz işlem"
+ *         description: Yalnızca kendi profilinizi güncelleyebilirsiniz
  *       404:
- *         description: "Kullanıcı bulunamadı"
+ *         description: Kullanıcı veya üniversite bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -4189,13 +3934,24 @@
  *           format: objectId
  *     responses:
  *       200:
- *         description: "Kullanıcının not listesi"
+ *         description: Kullanıcının not listesi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Note'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Yetkisiz işlem"
+ *         description: Bu üniversiteye erişim izniniz yok
  *       404:
- *         description: "Kullanıcı veya üniversite bulunamadı"
+ *         description: Üniversite bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -4220,14 +3976,33 @@
  *           format: objectId
  *     responses:
  *       200:
- *         description: "Kullanıcının yorum listesi"
+ *         description: Kullanıcının yorum listesi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Yetkisiz işlem"
+ *         description: Bu üniversiteye erişim izniniz yok
  *       404:
- *         description: "Kullanıcı veya üniversite bulunamadı"
+ *         description: Üniversite bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
+
+
+
+
+
+
+
+
 
 
 
@@ -4254,13 +4029,12 @@
 
 
 // ======================= DEPARTMENT CODE ROUTES =======================
-// Bu bölüm üniversite bazlı ders kodu işlemleri için endpointleri kapsar.
 
 /**
  * @openapi
  * tags:
  *   - name: DepartmentCode
- *     description: "Üniversiteye özel ders kodu işlemleri (giriş yapan kullanıcılar ve adminler için)"
+ *     description: Üniversiteye özel bölüm/ders kodlarını listeleme
  */
 
 /**
@@ -4270,21 +4044,18 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [DepartmentCode]
- *     summary: "Slug ile ders kodlarını getir (giriş yapmış kullanıcı)"
- *     description: |
- *       Belirtilen üniversite `slug` değerine göre o üniversiteye ait tüm ders kodlarını döndürür.
- *       - Token gereklidir ve token'daki üniversite ile slug uyuşmalıdır.
- *       - Not yükleme ekranında dropdown listesi için kullanılabilir.
+ *     summary: Slug üzerinden bölüm kodlarını getir
+ *     description: Kullanıcının token'ındaki üniversite ile slug eşleşiyorsa ilgili üniversitenin kodları döndürülür.
  *     parameters:
  *       - in: path
  *         name: slug
  *         required: true
  *         schema:
  *           type: string
- *         description: "Üniversite slug değeri (örn: 'yasar')"
+ *         description: Üniversite slug değeri
  *     responses:
  *       200:
- *         description: "Kodlar başarıyla getirildi"
+ *         description: Bölüm kodları listelendi
  *         content:
  *           application/json:
  *             schema:
@@ -4293,125 +4064,23 @@
  *                 codes:
  *                   type: array
  *                   items:
- *                     $ref: "#/components/schemas/DepartmentCode"
+ *                     type: object
+ *                     properties:
+ *                       code:
+ *                         type: string
+ *                       type:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       403:
- *         description: "Token'daki üniversite ile slug uyuşmazsa erişim reddedilir"
+ *         description: Token'daki üniversite ile slug uyuşmuyor
  *       404:
- *         description: "Üniversite bulunamadı"
+ *         description: Üniversite bulunamadı
  *       500:
- *         description: "Sunucu hatası"
- */
-
-/**
- * @openapi
- * /department-codes:
- *   post:
- *     security:
- *       - bearerAuth: []
- *     tags: [DepartmentCode]
- *     summary: "Yeni ders kodu ekle (kullanıcı ve admin erişimi)"
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - code
- *             properties:
- *               code:
- *                 type: string
- *                 description: "Eklenecek ders kodu"
- *                 example: "COMP"
- *     responses:
- *       201:
- *         description: "Kod başarıyla eklendi"
- *       400:
- *         description: "Kod eksik veya zaten mevcut"
- *       500:
- *         description: "Kod eklenemedi"
- */
-
-/**
- * @openapi
- * /admin/department-codes:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [DepartmentCode]
- *     summary: "Tüm kodları listele (admin erişimi)"
- *     responses:
- *       200:
- *         description: "Kodlar listelendi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 codes:
- *                   type: array
- *                   items:
- *                     $ref: "#/components/schemas/DepartmentCode"
- *       500:
- *         description: "Sunucu hatası"
- */
-
-/**
- * @openapi
- * /admin/department-codes/{id}:
- *   patch:
- *     security:
- *       - bearerAuth: []
- *     tags: [DepartmentCode]
- *     summary: "Kod güncelle (admin erişimi)"
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: "Güncellenecek kodun ID'si"
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               code:
- *                 type: string
- *                 example: "ENGR"
- *     responses:
- *       200:
- *         description: "Kod güncellendi"
- *       404:
- *         description: "Kod bulunamadı"
- *       500:
- *         description: "Güncelleme hatası"
- */
-
-/**
- * @openapi
- * /admin/department-codes/{id}:
- *   delete:
- *     security:
- *       - bearerAuth: []
- *     tags: [DepartmentCode]
- *     summary: "Kod sil (admin erişimi)"
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: "Silinecek kodun ID'si"
- *     responses:
- *       200:
- *         description: "Kod silindi"
- *       404:
- *         description: "Kod bulunamadı"
- *       500:
- *         description: "Silme hatası"
+ *         description: Kodlar getirilemedi
  */
 
 
@@ -4442,7 +4111,6 @@
 
 
 // ======================= SUGGESTIONS ROUTES =======================
-// Bu bölüm kullanıcı önerileri işlemlerini kapsar.
 /**
  * @openapi
  * tags:
@@ -4458,7 +4126,6 @@
  *       - bearerAuth: []
  *     tags: [Suggestions]
  *     summary: Yeni öneri oluştur
- *     description: Giriş yapmış kullanıcı yeni öneri gönderebilir
  *     requestBody:
  *       required: true
  *       content:
@@ -4472,33 +4139,20 @@
  *               title:
  *                 type: string
  *                 maxLength: 200
- *                 example: "Mobil uygulama geliştirin"
+ *                 example: Mobil uygulama geliştirin
  *               content:
  *                 type: string
  *                 maxLength: 1000
- *                 example: "iOS ve Android için native uygulama olsa çok güzel olur."
+ *                 example: iOS ve Android için native uygulama olsa çok güzel olur.
  *     responses:
  *       201:
- *         description: "Öneri başarıyla gönderildi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Öneriniz başarıyla gönderildi."
- *                 data:
- *                   $ref: '#/components/schemas/UserSuggestion'
+ *         description: Öneri oluşturuldu
  *       400:
- *         description: "Başlık ve içerik zorunludur"
+ *         description: Başlık ve içerik zorunludur
  *       401:
- *         description: "Token eksik"
+ *         description: "Yetkisiz erişim: Token eksik"
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -4508,55 +4162,25 @@
  *     security:
  *       - bearerAuth: []
  *     tags: [Suggestions]
- *     summary: Kendi önerilerini getir
- *     description: Giriş yapmış kullanıcının kendi önerilerini sayfalama ile getirir
+ *     summary: Kullanıcının kendi önerilerini listele
  *     parameters:
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Sayfa numarası
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Sayfa başına gösterilecek öneri sayısı
  *     responses:
  *       200:
- *         description: "Öneri listesi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/UserSuggestion'
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     page:
- *                       type: integer
- *                       example: 1
- *                     limit:
- *                       type: integer
- *                       example: 10
- *                     total:
- *                       type: integer
- *                       example: 5
- *                     pages:
- *                       type: integer
- *                       example: 1
+ *         description: Öneriler listelendi
  *       401:
- *         description: "Token eksik"
+ *         description: "Yetkisiz erişim: Token eksik"
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  */
 
 /**
@@ -4567,45 +4191,34 @@
  *       - bearerAuth: []
  *     tags: [Suggestions]
  *     summary: Öneri detayını getir
- *     description: Kullanıcı sadece kendi önerisinin detayını görebilir
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Öneri ID
  *     responses:
  *       200:
- *         description: "Öneri detayı"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/UserSuggestion'
+ *         description: Öneri detayları
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
  *       404:
- *         description: "Öneri bulunamadı"
+ *         description: Öneri bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  *
  *   put:
  *     security:
  *       - bearerAuth: []
  *     tags: [Suggestions]
  *     summary: Öneriyi güncelle
- *     description: Kullanıcı sadece "Beklemede" ve "Görüldü" durumundaki kendi önerilerini güncelleyebilir
+ *     description: Kullanıcı sadece "Beklemede" veya "Görüldü" durumundaki önerilerini güncelleyebilir.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Öneri ID
  *     requestBody:
  *       required: true
  *       content:
@@ -4616,50 +4229,758 @@
  *               title:
  *                 type: string
  *                 maxLength: 200
- *                 example: "Mobil uygulama ve web PWA"
  *               content:
  *                 type: string
  *                 maxLength: 1000
- *                 example: "Hem mobil uygulama hem de Progressive Web App olarak geliştirilebilir."
  *     responses:
  *       200:
- *         description: "Öneri güncellendi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Öneri başarıyla güncellendi."
- *                 data:
- *                   $ref: '#/components/schemas/UserSuggestion'
+ *         description: Öneri güncellendi
  *       400:
- *         description: "Bu durumdaki öneri güncellenemez"
+ *         description: Geçersiz durum veya alan
  *       404:
- *         description: "Öneri bulunamadı"
+ *         description: Öneri bulunamadı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Sunucu hatası
  *
  *   delete:
  *     security:
  *       - bearerAuth: []
  *     tags: [Suggestions]
  *     summary: Öneriyi sil
- *     description: Kullanıcı sadece "Beklemede" ve "Görüldü" durumundaki kendi önerilerini silebilir
+ *     description: Kullanıcı sadece "Beklemede" veya "Görüldü" durumundaki önerilerini silebilir.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Öneri ID
  *     responses:
  *       200:
- *         description: "Öneri silindi"
+ *         description: Öneri silindi
+ *       400:
+ *         description: Geçersiz durum
+ *       404:
+ *         description: Öneri bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================= REACTION ROUTES =======================
+/**
+ * @openapi
+ * tags:
+ *   - name: Reactions
+ *     description: Notlar ve yorumlar için beğeni, beğenmeme ve raporlama işlemleri
+ */
+
+/**
+ * @openapi
+ * /api/{targetType}/{id}/like:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Reactions]
+ *     summary: Hedef içeriği beğen
+ *     description: Aynı kullanıcıdan gelen tepkiler toggle mantığı ile yönetilir; mevcut beğeni tekrar gönderilirse kaldırılır.
+ *     parameters:
+ *       - in: path
+ *         name: targetType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [notes, note, comments, comment]
+ *         description: "Hedef türü (çoğul ve tekil varyasyonlar desteklenir)."
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Not veya yorumun benzersiz kimliği."
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               description:
+ *                 type: string
+ *                 description: "İsteğe bağlı açıklama metni. `processDescription` ve `commentDescription` alanlarıyla geriye dönük uyumlu."
+ *                 example: "Çok faydalı bir açıklama olmuş."
+ *               processDescription:
+ *                 type: string
+ *                 description: "Geriye dönük desteklenen alternatif alan."
+ *               commentDescription:
+ *                 type: string
+ *                 description: "Geriye dönük desteklenen alternatif alan."
+ *     responses:
+ *       200:
+ *         description: Beğeni başarıyla işlendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Beğeni güncellendi"
+ *                 likes:
+ *                   type: integer
+ *                   description: "Hedef içeriğin güncel beğeni sayısı."
+ *       400:
+ *         description: Geçersiz targetType
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       404:
+ *         description: Hedef içerik bulunamadı
+ *       429:
+ *         description: Çok fazla işlem yapıldı. Lütfen bir dakika bekleyin.
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /api/{targetType}/{id}/dislike:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Reactions]
+ *     summary: Hedef içeriği beğenmeme
+ *     description: Toggle mantığı ile çalışır; mevcut beğenmeme yeniden gönderilirse kaldırılır.
+ *     parameters:
+ *       - in: path
+ *         name: targetType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [notes, note, comments, comment]
+ *         description: "Hedef türü (çoğul ve tekil varyasyonlar desteklenir)."
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Not veya yorumun benzersiz kimliği."
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               description:
+ *                 type: string
+ *                 description: "Beğenmeme gerekçesi (opsiyonel). `processDescription` ve `commentDescription` alanlarıyla geriye dönük uyumlu."
+ *               processDescription:
+ *                 type: string
+ *               commentDescription:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Beğenmeme başarıyla işlendi
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Beğenmeme güncellendi"
+ *                 dislikes:
+ *                   type: integer
+ *                   description: "Hedef içeriğin güncel beğenmeme sayısı."
+ *       400:
+ *         description: Geçersiz targetType
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       404:
+ *         description: Hedef içerik bulunamadı
+ *       429:
+ *         description: Çok fazla işlem yapıldı. Lütfen bir dakika bekleyin.
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /api/{targetType}/{id}/report:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Reactions]
+ *     summary: Hedef içeriği raporla
+ *     description: Toggle mantığında çalışır; notlar 15 rapora ulaştığında otomatik olarak pasifleşir.
+ *     parameters:
+ *       - in: path
+ *         name: targetType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [notes, note, comments, comment]
+ *         description: "Hedef türü (çoğul ve tekil varyasyonlar desteklenir)."
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Not veya yorumun benzersiz kimliği."
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               description:
+ *                 type: string
+ *                 description: "Rapor açıklaması (opsiyonel). Diğer alanlar geriye dönük uyumluluk içindir."
+ *               processDescription:
+ *                 type: string
+ *               commentDescription:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Raporlama işlemi tamamlandı
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Raporlama işlemi tamamlandı"
+ *                 reports:
+ *                   type: integer
+ *                   description: "Toplam rapor sayısı."
+ *                 isActive:
+ *                   type: boolean
+ *                   description: "Notun aktiflik durumu (yalnızca not hedeflerinde döner)."
+ *       400:
+ *         description: Geçersiz targetType
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       404:
+ *         description: Hedef içerik bulunamadı
+ *       429:
+ *         description: Çok fazla işlem yapıldı. Lütfen bir dakika bekleyin.
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /api/{targetType}/{id}/my-reaction:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Reactions]
+ *     summary: Kullanıcının mevcut tepkisini görüntüle
+ *     parameters:
+ *       - in: path
+ *         name: targetType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [notes, note, comments, comment]
+ *         description: "Hedef türü (çoğul ve tekil varyasyonlar desteklenir)."
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Not veya yorumun benzersiz kimliği."
+ *     responses:
+ *       200:
+ *         description: Kullanıcının hedef içerik için tepkisi döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 hasReaction:
+ *                   type: boolean
+ *                   description: "Kullanıcının reaksiyonu olup olmadığını belirtir."
+ *                 reaction:
+ *                   type: object
+ *                   nullable: true
+ *                   description: "Reaksiyon türü, açıklaması ve zaman damgası. Reaksiyon yoksa null."
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [like, dislike, report]
+ *                     description:
+ *                       type: string
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Geçersiz targetType
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       404:
+ *         description: Hedef içerik bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================= SCOREBOARD GAME ROUTES =======================
+/**
+ * @openapi
+ * tags:
+ *   - name: Gamification
+ *     description: Kullanıcı puanları, rozetleri ve liderlik tabloları ile ilgili uç noktalar
+ */
+
+/**
+ * @openapi
+ * /api/gamification/user/{id}:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Kullanıcının gamification özetini getir
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Kullanıcının benzersiz kimliği."
+ *     responses:
+ *       200:
+ *         description: Gamification verileri döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     profilePic:
+ *                       type: string
+ *                       nullable: true
+ *                       description: "Profil fotoğrafı URL'i."
+ *                     university:
+ *                       type: object
+ *                       nullable: true
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                         slug:
+ *                           type: string
+ *                         _id:
+ *                           type: string
+ *                           description: "Üniversite kaydının kimliği."
+ *                 gamification:
+ *                   type: object
+ *                   properties:
+ *                     score:
+ *                       type: integer
+ *                     monthlyScore:
+ *                       type: integer
+ *                     level:
+ *                       type: integer
+ *                     levelInfo:
+ *                       type: object
+ *                       description: "Mevcut seviyenin adı ve gereksinimleri."
+ *                     badges:
+ *                       type: array
+ *                       description: "Kullanıcının kazandığı rozetlerin detayları."
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           icon:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                             nullable: true
+ *                     stats:
+ *                       type: object
+ *                       description: "Kullanıcının içerik üretimi ve etkileşim istatistikleri."
+ *                     nextLevel:
+ *                       type: object
+ *                       nullable: true
+ *                       description: "Bir sonraki seviyeye ait hedefler (varsa)."
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /api/gamification/user/{id}/badges:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Kullanıcının rozet durumlarını listele
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Rozetler döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userName:
+ *                   type: string
+ *                 earnedCount:
+ *                   type: integer
+ *                 totalCount:
+ *                   type: integer
+ *                 badges:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       icon:
+ *                         type: string
+ *                       earned:
+ *                         type: boolean
+ *                       progress:
+ *                         type: number
+ *                         format: float
+ *                         description: "Rozet ilerleme yüzdesi (0-100)."
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       404:
+ *         description: Kullanıcı bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /api/gamification/leaderboard/{slug}/monthly:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Üniversiteye özel aylık liderlik tablosunu getir
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Üniversitenin benzersiz kısa adı (slug)."
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: "Listelenecek maksimum kullanıcı sayısı."
+ *     responses:
+ *       200:
+ *         description: Liderlik tablosu döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 university:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     slug:
+ *                       type: string
+ *                 period:
+ *                   type: string
+ *                   example: "monthly"
+ *                 leaderboard:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       rank:
+ *                         type: integer
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                             nullable: true
+ *                           level:
+ *                             type: integer
+ *                           badgeCount:
+ *                             type: integer
+ *                       score:
+ *                         type: integer
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /api/gamification/leaderboard/global:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Global liderlik tablosunu getir
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: "Listelenecek maksimum kullanıcı sayısı."
+ *     responses:
+ *       200:
+ *         description: Global liderlik tablosu döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 period:
+ *                   type: string
+ *                   example: "all-time"
+ *                 leaderboard:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       rank:
+ *                         type: integer
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           profilePic:
+ *                             type: string
+ *                             nullable: true
+ *                           level:
+ *                             type: integer
+ *                           badgeCount:
+ *                             type: integer
+ *                           university:
+ *                             type: object
+ *                             nullable: true
+ *                             properties:
+ *                               name:
+ *                                 type: string
+ *                               slug:
+ *                                 type: string
+ *                       score:
+ *                         type: integer
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+/**
+ * @openapi
+ * /api/gamification/{slug}/stats:
+ *   get:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [Gamification]
+ *     summary: Üniversite bazlı gamification istatistiklerini getir
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Üniversitenin benzersiz kısa adı (slug)."
+ *     responses:
+ *       200:
+ *         description: Üniversite istatistikleri döndürüldü
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 university:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                     slug:
+ *                       type: string
+ *                 stats:
+ *                   type: object
+ *                   properties:
+ *                     totalUsers:
+ *                       type: integer
+ *                     activeUsers:
+ *                       type: integer
+ *                     totalScore:
+ *                       type: integer
+ *                     averageLevel:
+ *                       type: number
+ *                       format: float
+ *                     topUser:
+ *                       type: object
+ *                       nullable: true
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                         score:
+ *                           type: integer
+ *                         level:
+ *                           type: integer
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       404:
+ *         description: Üniversite bulunamadı
+ *       500:
+ *         description: Sunucu hatası
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================= UPLOAD ROUTES =======================
+
+// Not dosyalarını ZIP'leyip Google Drive'a aktaran tek endpoint için dokümantasyon.
+
+/**
+ * @openapi
+ * tags:
+ *   - name: File Upload
+ *     description: PDF ve görsel dosyaları Google Drive'a yükleme servisleri
+ */
+
+/**
+ * @openapi
+ * /api/upload-to-drive:
+ *   post:
+ *     security:
+ *       - bearerAuth: []
+ *     tags: [File Upload]
+ *     summary: Dosyaları Google Drive'a yükle
+ *     description: Seçilen PDF veya görsel dosyalarını aynı istek içinde ZIP'leyerek Google Drive'a yükler ve paylaşılabilir bağlantı döndürür.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - files
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 description: Yüklenecek dosyalar (PDF, JPEG veya PNG).
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       200:
+ *         description: Dosyalar başarıyla ZIP'lenip Drive'a yüklendi
  *         content:
  *           application/json:
  *             schema:
@@ -4668,22 +4989,61 @@
  *                 success:
  *                   type: boolean
  *                   example: true
+ *                 url:
+ *                   type: string
+ *                   description: "Google Drive paylaşım bağlantısı"
+ *                   example: https://drive.google.com/file/d/1ABC123xyz/view
+ *                 fileName:
+ *                   type: string
+ *                   description: Oluşturulan ZIP dosyasının adı
+ *                   example: dosyalar-1699123456789.zip
+ *                 fileCount:
+ *                   type: integer
+ *                   description: ZIP içine alınan dosya sayısı
+ *                   example: 3
  *                 message:
  *                   type: string
- *                   example: "Öneri başarıyla silindi."
+ *                   example: 3 dosya başarıyla ZIP'lenerek Drive'a yüklendi
  *       400:
- *         description: "Bu durumdaki öneri silinemez"
- *       404:
- *         description: "Öneri bulunamadı"
+ *         description: En az bir dosya seçilmedi veya dosya türü desteklenmiyor
+ *       401:
+ *         description: "Yetkisiz erişim: Token eksik"
+ *       403:
+ *         description: Token geçersiz, süresi dolmuş veya kullanıcı pasif
+ *       413:
+ *         description: Maksimum toplam dosya boyutu (50 MB) aşıldı
  *       500:
- *         description: "Sunucu hatası"
+ *         description: Dosyalar yüklenirken sunucu hatası oluştu
  */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 // ======================= TEST ROUTES =======================
 // Bu bölüm hem public ping endpointini hem de JWT ile korunan protected endpointi kapsar.
+
 /**
  * @openapi
  * tags:
@@ -4754,251 +5114,3 @@
  */
 
 
-
-
-
-/**
- * @swagger
- * /api/upload-to-drive:
- *   post:
- *     summary: "Dosyaları Google Drive'a yükle"
- *     description: "Seçilen dosyaları ZIP'leyerek Google Drive'a yükler ve paylaşılabilir link döndürür"
- *     tags: [File Upload]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               files:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
- *                 description: "Yüklenecek dosyalar (PDF ve görsel dosyaları, toplamda max 50MB)"
- *             required:
- *               - files
- *     responses:
- *       200:
- *         description: "Dosyalar başarıyla yüklendi"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 url:
- *                   type: string
- *                   example: "https://drive.google.com/file/d/1ABC123xyz/view"
- *                   description: "Google Drive paylaşım linki"
- *                 fileName:
- *                   type: string
- *                   example: "dosyalar-1699123456789.zip"
- *                   description: "Oluşturulan ZIP dosyasının adı"
- *                 fileCount:
- *                   type: integer
- *                   example: 5
- *                   description: "ZIP'lenen dosya sayısı"
- *                 message:
- *                   type: string
- *                   example: "5 dosya başarıyla ZIP'lenerek Drive'a yüklendi"
- *       400:
- *         description: "Geçersiz istek"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "En az bir dosya seçmelisiniz"
- *       401:
- *         description: "Token eksik"
- *       403:
- *         description: "Token geçersiz"
- *       413:
- *         description: "Dosya boyutu çok büyük (max 50MB toplam)"
- *       500:
- *         description: "Sunucu hatası"
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Dosya yükleme hatası: Drive API connection failed"
- */
-
-/**
- * @openapi
- * /gamification/user/{id}:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Gamification]
- *     summary: Kullanıcının oyunlaştırma bilgilerini getir
- *     description: Kullanıcının puan, seviye, rozet ve istatistik bilgilerini döner
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Kullanıcı ID
- *     responses:
- *       200:
- *         description: Başarılı
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     profilePic:
- *                       type: string
- *                     university:
- *                       type: object
- *                 gamification:
- *                   type: object
- *                   properties:
- *                     score:
- *                       type: number
- *                     monthlyScore:
- *                       type: number
- *                     level:
- *                       type: number
- *                     levelInfo:
- *                       type: object
- *                     badges:
- *                       type: array
- *                       items:
- *                         type: object
- *                     stats:
- *                       type: object
- *       404:
- *         description: Kullanıcı bulunamadı
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /gamification/user/{id}/badges:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Gamification]
- *     summary: Kullanıcının rozetlerini getir
- *     description: Kullanıcının kazandığı ve henüz kazanmadığı tüm rozetleri döner
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Kullanıcı ID
- *     responses:
- *       200:
- *         description: Başarılı
- *       404:
- *         description: Kullanıcı bulunamadı
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /gamification/leaderboard/{slug}/monthly:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Gamification]
- *     summary: Üniversite aylık liderlik tablosu
- *     description: Belirtilen üniversitenin aylık puan sıralaması (Top 50)
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *         description: Üniversite slug
- *       - in: query
- *         name: limit
- *         schema:
- *           type: number
- *           default: 50
- *         description: Kaç kullanıcı gösterilecek
- *     responses:
- *       200:
- *         description: Başarılı
- *       404:
- *         description: Üniversite bulunamadı
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /gamification/leaderboard/global:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Gamification]
- *     summary: Global liderlik tablosu
- *     description: Tüm kullanıcıların toplam puan sıralaması (Top 50)
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: number
- *           default: 50
- *         description: Kaç kullanıcı gösterilecek
- *     responses:
- *       200:
- *         description: Başarılı
- *       500:
- *         description: Sunucu hatası
- */
-
-/**
- * @openapi
- * /gamification/{slug}/stats:
- *   get:
- *     security:
- *       - bearerAuth: []
- *     tags: [Gamification]
- *     summary: Üniversite istatistikleri
- *     description: Belirtilen üniversitenin oyunlaştırma istatistikleri
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *         description: Üniversite slug
- *     responses:
- *       200:
- *         description: Başarılı
- *       404:
- *         description: Üniversite bulunamadı
- *       500:
- *         description: Sunucu hatası
- */

@@ -10,4 +10,8 @@ src/seeds/**
 # (private)
 package.local.json
 
+# Migration (geçici - daha sonra push edilecek)
+src/migrations/
+MIGRATION_GUIDE.md
+
 # srm -rf .git  bu komut git bağlantısını kesiyor.
