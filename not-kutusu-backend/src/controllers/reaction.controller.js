@@ -30,23 +30,19 @@ const sendLikeNotification = async (userId, userName, noteId, noteOwnerId, io) =
 /**
  * ✅ Like
  * POST /api/:targetType/:id/like
- * Body: { processDescription, commentDescription, description } (opsiyonel, herhangi biri)
+ * Body: description gereksiz (like için açıklama kullanılmaz)
  */
 const likeTarget = async (req, res) => {
   try {
     let { targetType, id: targetId } = req.params;
     const userId = req.user.userId;
 
-    // Backward compatibility: processDescription, commentDescription veya description
-    const { processDescription, commentDescription, description } = req.body || {};
-    const finalDescription = processDescription || commentDescription || description || "";
-
-    // Çoğul → tekil dönüşümü (frontend uyumluluğu için)
+    // Tekil → çoğul dönüşümü (model uyumluluğu için)
     const typeMap = {
-      "notes": "note",
-      "note": "note",
-      "comments": "comment",
-      "comment": "comment"
+      "notes": "notes",
+      "note": "notes",
+      "comments": "comments",
+      "comment": "comments"
     };
     targetType = typeMap[targetType];
 
@@ -56,7 +52,7 @@ const likeTarget = async (req, res) => {
     }
 
     // Target var mı?
-    const Model = targetType === "note" ? Note : Comment;
+    const Model = targetType === "notes" ? Note : Comment;
     const target = await Model.findById(targetId);
     if (!target) {
       return res.status(404).json({ message: `${targetType} bulunamadı` });
@@ -78,7 +74,7 @@ const likeTarget = async (req, res) => {
         await updateCounter(targetType, targetId, "likes", -1);
 
         // 🎮 Gamification: Like kaldırıldı (sadece note için)
-        if (targetType === "note") {
+        if (targetType === "notes") {
           await gamificationService.onLikeRemoved(target.createdBy.toString());
         }
 
@@ -87,7 +83,7 @@ const likeTarget = async (req, res) => {
         const oldType = existingReaction.type;
 
         existingReaction.type = "like";
-        existingReaction.description = finalDescription;
+        existingReaction.description = undefined; // Like için description yok
         existingReaction.timestamp = new Date();
         await existingReaction.save();
 
@@ -96,7 +92,7 @@ const likeTarget = async (req, res) => {
         await updateCounter(targetType, targetId, "likes", 1);
 
         // 🎮 Gamification: Yeni like aldı (sadece note için)
-        if (targetType === "note") {
+        if (targetType === "notes") {
           await gamificationService.onLikeReceived(target.createdBy.toString());
           shouldSendNotification = true;
         }
@@ -107,21 +103,21 @@ const likeTarget = async (req, res) => {
         userId,
         targetType,
         targetId,
-        type: "like",
-        description: finalDescription
+        type: "like"
+        // description: like için gerekli değil
       });
 
       await updateCounter(targetType, targetId, "likes", 1);
 
       // 🎮 Gamification: Yeni like aldı (sadece note için)
-      if (targetType === "note") {
+      if (targetType === "notes") {
         await gamificationService.onLikeReceived(target.createdBy.toString());
         shouldSendNotification = true;
       }
     }
 
     // 📢 Bildirim gönder (sadece like eklendiğinde, sadece note için)
-    if (shouldSendNotification && targetType === "note") {
+    if (shouldSendNotification && targetType === "notes") {
       const io = req.app.get("io");
       await sendLikeNotification(
         userId,
@@ -149,23 +145,19 @@ const likeTarget = async (req, res) => {
 /**
  * ❌ Dislike
  * POST /api/:targetType/:id/dislike
- * Body: { processDescription, commentDescription, description } (opsiyonel, herhangi biri)
+ * Body: description gereksiz (dislike için açıklama kullanılmaz)
  */
 const dislikeTarget = async (req, res) => {
   try {
     let { targetType, id: targetId } = req.params;
     const userId = req.user.userId;
 
-    // Backward compatibility: processDescription, commentDescription veya description
-    const { processDescription, commentDescription, description } = req.body || {};
-    const finalDescription = processDescription || commentDescription || description || "";
-
-    // Çoğul → tekil dönüşümü (frontend uyumluluğu için)
+    // Tekil → çoğul dönüşümü (model uyumluluğu için)
     const typeMap = {
-      "notes": "note",
-      "note": "note",
-      "comments": "comment",
-      "comment": "comment"
+      "notes": "notes",
+      "note": "notes",
+      "comments": "comments",
+      "comment": "comments"
     };
     targetType = typeMap[targetType];
 
@@ -196,7 +188,7 @@ const dislikeTarget = async (req, res) => {
         const oldType = existingReaction.type;
 
         existingReaction.type = "dislike";
-        existingReaction.description = finalDescription;
+        existingReaction.description = undefined; // Dislike için description yok
         existingReaction.timestamp = new Date();
         await existingReaction.save();
 
@@ -209,8 +201,8 @@ const dislikeTarget = async (req, res) => {
         userId,
         targetType,
         targetId,
-        type: "dislike",
-        description: finalDescription
+        type: "dislike"
+        // description: dislike için gerekli değil
       });
 
       await updateCounter(targetType, targetId, "dislikes", 1);
@@ -243,12 +235,12 @@ const reportTarget = async (req, res) => {
     const { processDescription, commentDescription, description } = req.body || {};
     const finalDescription = processDescription || commentDescription || description || "";
 
-    // Çoğul → tekil dönüşümü (frontend uyumluluğu için)
+    // Tekil → çoğul dönüşümü (model uyumluluğu için)
     const typeMap = {
-      "notes": "note",
-      "note": "note",
-      "comments": "comment",
-      "comment": "comment"
+      "notes": "notes",
+      "note": "notes",
+      "comments": "comments",
+      "comment": "comments"
     };
     targetType = typeMap[targetType];
 
@@ -302,7 +294,7 @@ const reportTarget = async (req, res) => {
     // 🚫 15+ report varsa pasifleştir (sadece note için)
     const updatedTarget = await Model.findById(targetId).select("reports isActive");
 
-    if (targetType === "note" && updatedTarget.reports >= 15) {
+    if (targetType === "notes" && updatedTarget.reports >= 15) {
       updatedTarget.isActive = false;
       await updatedTarget.save();
     }
@@ -328,12 +320,12 @@ const getMyReaction = async (req, res) => {
     let { targetType, id: targetId } = req.params;
     const userId = req.user.userId;
 
-    // Çoğul → tekil dönüşümü (frontend uyumluluğu için)
+    // Tekil → çoğul dönüşümü (model uyumluluğu için)
     const typeMap = {
-      "notes": "note",
-      "note": "note",
-      "comments": "comment",
-      "comment": "comment"
+      "notes": "notes",
+      "note": "notes",
+      "comments": "comments",
+      "comment": "comments"
     };
     targetType = typeMap[targetType];
 

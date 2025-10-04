@@ -14,357 +14,558 @@
  *     User:
  *       type: object
  *       description: MongoDB `User` dokümanı.
+ *       required:
+ *         - name
+ *         - email
+ *         - password
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         name:
  *           type: string
+ *           description: "✔️ ZORUNLU - Kullanıcının adı ve soyadı (2-50 karakter)"
  *         email:
  *           type: string
  *           format: email
+ *           description: "✔️ ZORUNLU - Email adresi (unique, max 100 karakter)"
  *         password:
  *           type: string
+ *           description: "✔️ ZORUNLU - Şifre (bcrypt hash, 6-128 karakter, 1 büyük, 1 küçük, 1 rakam içermeli)"
  *         universityId:
  *           type: string
  *           format: objectId
  *           nullable: true
+ *           description: "Üniversite referansı (user rolü için zorunlu, admin için null)"
  *         profilePic:
  *           type: string
  *           nullable: true
+ *           description: Profil fotoğrafı URL'si (http/https ile başlamalı)
  *         score:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "🎮 Toplam gamification puanı"
  *         monthlyScore:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "🎮 Aylık gamification puanı (her ay 1'inde sıfırlanır)"
  *         level:
  *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *           maximum: 6
+ *           description: "🎮 Kullanıcı seviyesi (1: Acemi, 2: Başlangıç, 3: Orta, 4: İleri, 5: Uzman, 6: Usta)"
  *         badges:
  *           type: array
  *           items:
  *             type: string
+ *           description: "🎮 Kazanılan rozetlerin ID listesi"
  *         stats:
  *           type: object
+ *           description: "📊 Kullanıcı istatistikleri"
  *           properties:
  *             notes:
  *               type: integer
+ *               default: 0
+ *               minimum: 0
+ *               description: Yüklenen toplam not sayısı
  *             comments:
  *               type: integer
+ *               default: 0
+ *               minimum: 0
+ *               description: Yapılan toplam yorum sayısı
  *             likesReceived:
  *               type: integer
+ *               default: 0
+ *               minimum: 0
+ *               description: Alınan toplam beğeni sayısı
  *         lastMonthlyReset:
  *           type: string
  *           format: date-time
  *           nullable: true
+ *           description: "🎮 Son aylık sıfırlama tarihi (cron job tarafından güncellenir)"
  *         aboutMe:
  *           type: string
  *           nullable: true
+ *           description: Kullanıcı hakkında bilgi (max 500 karakter)
  *         department:
  *           type: string
  *           nullable: true
+ *           description: Kullanıcının bölümü (max 100 karakter)
  *         socialLinks:
  *           type: object
+ *           description: Sosyal medya linkleri
  *           properties:
  *             linkedin:
  *               type: string
  *               nullable: true
+ *               description: LinkedIn profil URL'i
  *             github:
  *               type: string
  *               nullable: true
+ *               description: GitHub profil URL'i
  *         notifications:
  *           type: boolean
+ *           default: true
+ *           description: Bildirim tercihi (true = bildirimleri aç, false = kapat)
  *         isVerified:
  *           type: boolean
+ *           default: false
+ *           description: "✉️ Email doğrulama durumu (false ise giriş yapamaz)"
  *         isActive:
  *           type: boolean
+ *           default: true
+ *           description: "🚫 Hesap aktiflik durumu (false = banlı/pasif, giriş yapamaz)"
  *         role:
  *           type: string
  *           enum: [user, admin]
+ *           default: user
+ *           description: Kullanıcı rolü
  *         verificationToken:
  *           type: string
  *           nullable: true
+ *           description: "✉️ Email doğrulama token'ı (JWT, 24 saat geçerli)"
  *         verificationExpires:
  *           type: string
  *           format: date-time
  *           nullable: true
+ *           description: "✉️ Email doğrulama token'ı son kullanma tarihi"
  *         resetPasswordToken:
  *           type: string
  *           nullable: true
+ *           description: "🔑 Şifre sıfırlama token'ı (JWT, 1 saat geçerli)"
  *         resetPasswordExpires:
  *           type: string
  *           format: date-time
  *           nullable: true
+ *           description: "🔑 Şifre sıfırlama token'ı son kullanma tarihi"
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: Kayıt oluşturulma tarihi
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: Son güncellenme tarihi
  *
  *     University:
  *       type: object
  *       description: MongoDB `University` dokümanı.
+ *       required:
+ *         - name
+ *         - slug
+ *         - emailDomains
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         name:
  *           type: string
+ *           description: "✔️ ZORUNLU - Üniversitenin tam adı (örn: Boğaziçi Üniversitesi)"
  *         slug:
  *           type: string
+ *           description: "✔️ ZORUNLU - URL-friendly üniversite slug'ı (unique, örn: bogazici)"
  *         emailDomains:
  *           type: array
  *           items:
  *             type: string
+ *           description: "✔️ ZORUNLU - Kabul edilen email domain listesi (örn: ['boun.edu.tr'])"
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: Kayıt oluşturulma tarihi
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: Son güncellenme tarihi
  *
  *     Course:
  *       type: object
  *       description: MongoDB `Course` dokümanı.
+ *       required:
+ *         - code
+ *         - type
+ *         - universityId
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         code:
  *           type: string
+ *           description: "✔️ ZORUNLU - Ders kodu (otomatik uppercase, trim, örn: COMP101E)"
  *         type:
  *           type: string
  *           enum: [split, single]
+ *           description: "✔️ ZORUNLU - Ders kodu tipi (split: COMP101E gibi sonunda harf var, single: COMP101 gibi sadece rakam)"
  *         universityId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Üniversite referansı (her ders bir üniversiteye ait)"
  *         noteCount:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: Bu derse ait not sayısı (otomatik güncellenir)
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: Kayıt oluşturulma tarihi
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: Son güncellenme tarihi
  *
  *     Note:
  *       type: object
  *       description: MongoDB `Note` dokümanı.
+ *       required:
+ *         - title
+ *         - courseId
+ *         - driveLink
+ *         - createdBy
+ *         - universityId
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         title:
  *           type: string
+ *           description: "✔️ ZORUNLU - Not başlığı (max 100 karakter)"
  *         description:
  *           type: string
  *           nullable: true
+ *           maxLength: 550
+ *           description: Not açıklaması (opsiyonel, max 550 karakter)
  *         courseId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Ders referansı (bu notun hangi derse ait olduğu)"
  *         instructor:
  *           type: string
  *           nullable: true
+ *           maxLength: 100
+ *           description: Dersi veren hoca adı (opsiyonel, max 100 karakter, Türkçe karakter normalize edilir)
  *         driveLink:
  *           type: string
+ *           description: "✔️ ZORUNLU - Google Drive linki (https://drive.google.com ile başlamalı, min 10KB dosya boyutu)"
  *         year:
  *           type: string
  *           nullable: true
+ *           description: Notun ait olduğu akademik yıl (örn. 2023-2024, opsiyonel)
  *         createdBy:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Notu yükleyen kullanıcı referansı"
  *         universityId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Üniversite referansı (her not bir üniversiteye ait)"
  *         likes:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "👍 Beğeni sayısı (Reaction tablosundan denormalize edilmiş)"
  *         dislikes:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "👎 Beğenmeme sayısı (Reaction tablosundan denormalize edilmiş)"
  *         reports:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "🚩 Şikayet sayısı (Reaction tablosundan denormalize edilmiş, admin kontrol eder)"
  *         viewCount:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "👁️ Görüntülenme sayısı (her getNoteById çağrısında +1 artar)"
  *         isActive:
  *           type: boolean
+ *           default: true
+ *           description: "🚫 Aktiflik durumu (false = pasif/silinmiş, liste ve detaylarda görünmez)"
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: Kayıt oluşturulma tarihi
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: Son güncellenme tarihi
  *
  *     Comment:
  *       type: object
  *       description: MongoDB `Comment` dokümanı.
+ *       required:
+ *         - noteId
+ *         - userId
+ *         - text
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         noteId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Yorumun yapıldığı not referansı"
  *         userId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Yorumu yapan kullanıcı referansı"
  *         text:
  *           type: string
+ *           maxLength: 350
+ *           description: "✔️ ZORUNLU - Yorum metni (max 350 karakter, boş olamaz)"
  *         likes:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "👍 Beğeni sayısı (Reaction tablosundan denormalize edilmiş)"
  *         dislikes:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "👎 Beğenmeme sayısı (Reaction tablosundan denormalize edilmiş)"
  *         reports:
  *           type: integer
+ *           default: 0
+ *           minimum: 0
+ *           description: "🚩 Şikayet sayısı (Reaction tablosundan denormalize edilmiş, admin kontrol eder)"
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: Kayıt oluşturulma tarihi
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: Son güncellenme tarihi
  *
  *     DepartmentCode:
  *       type: object
- *       description: MongoDB `DepartmentCode` dokümanı.
+ *       description: MongoDB `DepartmentCode` dokümanı - Kullanıcıların önerdiği yeni ders kodları.
+ *       required:
+ *         - code
+ *         - type
+ *         - universityId
+ *         - addedBy
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         code:
  *           type: string
+ *           description: "✔️ ZORUNLU - Bölüm/Ders kodu (otomatik uppercase, trim, örn: COMP101E)"
  *         type:
  *           type: string
  *           enum: [split, single]
+ *           description: "✔️ ZORUNLU - Kod tipi (split: COMP101E gibi sonunda harf var, single: COMP101 gibi sadece rakam)"
  *         universityId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Üniversite referansı (kod hangi üniversiteye ait)"
  *         addedBy:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Öneriyi yapan kullanıcı referansı"
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: Kayıt oluşturulma tarihi
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: Son güncellenme tarihi
  *
  *     Notification:
  *       type: object
  *       description: MongoDB `Notification` dokümanı.
+ *       required:
+ *         - userId
+ *         - type
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         userId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Bildirimi alan kullanıcı referansı"
  *         type:
  *           type: string
  *           enum: [like, comment, badge, level_up]
+ *           description: "✔️ ZORUNLU - Bildirim tipi (like: beğeni, comment: yorum, badge: rozet kazanma, level_up: seviye atlama)"
  *         relatedNoteId:
  *           type: string
  *           format: objectId
  *           nullable: true
+ *           description: "📝 İlgili not referansı (like ve comment tipleri için kullanılır)"
  *         lastComment:
  *           type: string
  *           nullable: true
+ *           maxLength: 100
+ *           description: "💬 Son yapılan yorumun ilk 100 karakteri (comment tipi için)"
  *         badge:
  *           type: object
  *           nullable: true
+ *           description: "🏅 Kazanılan rozet bilgisi (badge tipi için)"
  *           properties:
  *             id:
  *               type: string
+ *               description: Rozet ID'si
  *             name:
  *               type: string
+ *               description: Rozet adı
  *             icon:
  *               type: string
+ *               description: Rozet ikonu
  *         newLevel:
  *           type: integer
  *           nullable: true
+ *           minimum: 1
+ *           maximum: 6
+ *           description: "📈 Yeni seviye (level_up tipi için, 1-6 arası)"
  *         count:
  *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *           description: "🔢 Bildirim gruplaması sayısı (kaç kişi beğendi, kaç yorum yapıldı)"
  *         lastActors:
  *           type: array
+ *           description: "👥 Son 3 kişinin bilgisi (beğeni/yorum yapanlar)"
  *           items:
  *             type: object
  *             properties:
  *               userId:
  *                 type: string
  *                 format: objectId
+ *                 description: Kullanıcı ID'si
  *               name:
  *                 type: string
+ *                 description: Kullanıcı adı
  *         isRead:
  *           type: boolean
+ *           default: false
+ *           description: "✅ Okunma durumu (true = okundu, false = okunmadı)"
  *         lastUpdated:
  *           type: string
  *           format: date-time
+ *           description: "🕐 Son güncelleme zamanı (bildirim gruplaması için, TTL index'te kullanılır)"
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: "Kayıt oluşturulma tarihi (TTL index: 30 gün sonra otomatik silinir)"
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: Son güncellenme tarihi
  *
  *     Reaction:
  *       type: object
- *       description: MongoDB `Reaction` dokümanı.
+ *       description: MongoDB `Reaction` dokümanı - Polymorphic model (hem not hem yorum için).
+ *       required:
+ *         - userId
+ *         - targetType
+ *         - targetId
+ *         - type
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         userId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Reaction'ı yapan kullanıcı referansı (unique index: userId + targetType + targetId)"
  *         targetType:
  *           type: string
- *           enum: [notes, comments]
+ *           enum: [note, comment]
+ *           description: "✔️ ZORUNLU - Hedef tipi (note: nota yapılan reaction, comment: yoruma yapılan reaction)"
  *         targetId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Hedef referansı (Note veya Comment ID'si)"
  *         type:
  *           type: string
  *           enum: [like, dislike, report]
+ *           description: "✔️ ZORUNLU - Reaction tipi (like: beğeni, dislike: beğenmeme, report: şikayet)"
  *         description:
  *           type: string
  *           nullable: true
+ *           maxLength: 200
+ *           description: "Açıklama metni (sadece report için kullanılır, like/dislike için null, max 200 karakter)"
  *         timestamp:
  *           type: string
  *           format: date-time
+ *           description: Reaction yapılma zamanı
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: Kayıt oluşturulma tarihi
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: "Son güncellenme tarihi (kullanıcı reaction'ını değiştirdiğinde güncellenir)"
  *
  *     UserSuggestion:
  *       type: object
  *       description: MongoDB `UserSuggestion` dokümanı.
+ *       required:
+ *         - title
+ *         - content
+ *         - userId
  *       properties:
  *         _id:
  *           type: string
  *           format: objectId
+ *           description: MongoDB ObjectId
  *         title:
  *           type: string
+ *           description: "✔️ ZORUNLU - Öneri başlığı (max 200 karakter)"
  *         content:
  *           type: string
+ *           description: "✔️ ZORUNLU - Öneri içeriği/açıklaması (max 1000 karakter)"
  *         userId:
  *           type: string
  *           format: objectId
+ *           description: "✔️ ZORUNLU - Öneriyi yapan kullanıcı referansı"
  *         status:
  *           type: string
  *           enum: [Beklemede, Görüldü, İnceleniyor, Eklendi, Eklenmedi]
+ *           default: Beklemede
+ *           description: "Öneri durumu (Beklemede: yeni, Görüldü: admin gördü, İnceleniyor: değerlendiriliyor, Eklendi: kabul edildi, Eklenmedi: reddedildi)"
  *         adminNotes:
  *           type: string
  *           nullable: true
+ *           description: Admin'in öneri hakkındaki notları (opsiyonel, max 500 karakter)
  *         adminId:
  *           type: string
  *           format: objectId
  *           nullable: true
+ *           description: Öneriyi işleyen admin referansı (opsiyonel)
  *         createdAt:
  *           type: string
  *           format: date-time
+ *           description: "Kayıt oluşturulma tarihi (TTL index: Eklendi/Eklenmedi durumunda 15 gün sonra otomatik silinir)"
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *           description: Son güncellenme tarihi
 */
+
+
+
+
+
+
 
 
 
@@ -1128,6 +1329,13 @@
 
 
 
+
+
+
+
+
+
+
 // ======================= NOTIFICATION ROUTES =======================
 // Bu bölüm bildirim servisinin endpointlerini kapsar.
 
@@ -1518,6 +1726,14 @@
  *       500:
  *         description: İşlem başarısız
  */
+
+
+
+
+
+
+
+
 
 
 
@@ -2526,6 +2742,10 @@
 
 
 
+
+
+
+
 // ======================= COURSES ROUTES =======================
 // Bu bölüm herkese açık kurs listesi ve kullanıcı üniversitesi özel kurs erişimlerini kapsar.
 
@@ -2679,6 +2899,15 @@
  *       500:
  *         description: Sunucu hatası
  */
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4314,23 +4543,6 @@
  *         schema:
  *           type: string
  *         description: "Not veya yorumun benzersiz kimliği."
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               description:
- *                 type: string
- *                 description: "İsteğe bağlı açıklama metni. `processDescription` ve `commentDescription` alanlarıyla geriye dönük uyumlu."
- *                 example: "Çok faydalı bir açıklama olmuş."
- *               processDescription:
- *                 type: string
- *                 description: "Geriye dönük desteklenen alternatif alan."
- *               commentDescription:
- *                 type: string
- *                 description: "Geriye dönük desteklenen alternatif alan."
  *     responses:
  *       200:
  *         description: Beğeni başarıyla işlendi
@@ -4382,20 +4594,6 @@
  *         schema:
  *           type: string
  *         description: "Not veya yorumun benzersiz kimliği."
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               description:
- *                 type: string
- *                 description: "Beğenmeme gerekçesi (opsiyonel). `processDescription` ve `commentDescription` alanlarıyla geriye dönük uyumlu."
- *               processDescription:
- *                 type: string
- *               commentDescription:
- *                 type: string
  *     responses:
  *       200:
  *         description: Beğenmeme başarıyla işlendi
@@ -5112,5 +5310,4 @@
  *       403:
  *         description: "Token geçersiz veya süresi dolmuş"
  */
-
 
