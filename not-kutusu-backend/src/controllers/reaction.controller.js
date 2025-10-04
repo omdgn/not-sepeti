@@ -136,9 +136,21 @@ const likeTarget = async (req, res) => {
     // Güncel counter değerlerini al
     const updatedTarget = await Model.findById(targetId).select("likes");
 
+    // Kullanıcının mevcut reaction durumunu al
+    const currentReaction = await Reaction.findOne({
+      userId,
+      targetType,
+      targetId
+    }).select("type description timestamp");
+
     res.status(200).json({
       message: "Beğeni güncellendi",
-      likes: updatedTarget.likes
+      likes: updatedTarget.likes,
+      myReaction: currentReaction ? {
+        type: currentReaction.type,
+        description: currentReaction.description,
+        timestamp: currentReaction.timestamp
+      } : null
     });
 
   } catch (err) {
@@ -215,9 +227,21 @@ const dislikeTarget = async (req, res) => {
 
     const updatedTarget = await Model.findById(targetId).select("dislikes");
 
+    // Kullanıcının mevcut reaction durumunu al
+    const currentReaction = await Reaction.findOne({
+      userId,
+      targetType,
+      targetId
+    }).select("type description timestamp");
+
     res.status(200).json({
       message: "Beğenmeme güncellendi",
-      dislikes: updatedTarget.dislikes
+      dislikes: updatedTarget.dislikes,
+      myReaction: currentReaction ? {
+        type: currentReaction.type,
+        description: currentReaction.description,
+        timestamp: currentReaction.timestamp
+      } : null
     });
 
   } catch (err) {
@@ -304,10 +328,22 @@ const reportTarget = async (req, res) => {
       await updatedTarget.save();
     }
 
+    // Kullanıcının mevcut reaction durumunu al
+    const currentReaction = await Reaction.findOne({
+      userId,
+      targetType,
+      targetId
+    }).select("type description timestamp");
+
     res.status(200).json({
       message: "Raporlama işlemi tamamlandı",
       reports: updatedTarget.reports,
-      isActive: updatedTarget.isActive !== undefined ? updatedTarget.isActive : true
+      isActive: updatedTarget.isActive !== undefined ? updatedTarget.isActive : true,
+      myReaction: currentReaction ? {
+        type: currentReaction.type,
+        description: currentReaction.description,
+        timestamp: currentReaction.timestamp
+      } : null
     });
 
   } catch (err) {
