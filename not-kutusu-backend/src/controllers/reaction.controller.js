@@ -99,13 +99,15 @@ const likeTarget = async (req, res) => {
       }
     } else {
       // 🔄 Hiç reaction yoksa → yeni ekle
-      await Reaction.create({
+      console.log('Creating reaction:', { userId, targetType, targetId, type: 'like' });
+      const newReaction = await Reaction.create({
         userId,
         targetType,
         targetId,
         type: "like"
         // description: like için gerekli değil
       });
+      console.log('Reaction created:', newReaction);
 
       await updateCounter(targetType, targetId, "likes", 1);
 
