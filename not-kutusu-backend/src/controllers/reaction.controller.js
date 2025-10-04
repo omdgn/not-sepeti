@@ -7,8 +7,11 @@ const gamificationService = require("../services/gamificationService");
  * Helper: Counter'ı güncelle (transaction-safe)
  */
 const updateCounter = async (targetType, targetId, field, increment) => {
-  const Model = targetType === "note" ? Note : Comment;
-  await Model.findByIdAndUpdate(targetId, { $inc: { [field]: increment } });
+  const Model = targetType === "notes" ? Note : Comment;
+  console.log('Updating counter:', { targetType, targetId, field, increment, Model: Model.modelName });
+  const result = await Model.findByIdAndUpdate(targetId, { $inc: { [field]: increment } }, { new: true });
+  console.log('Counter updated, new value:', result ? result[field] : 'NOT FOUND');
+  return result;
 };
 
 /**
