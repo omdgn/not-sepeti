@@ -360,6 +360,11 @@ const updateProfile = async (req, res) => {
         return res.status(400).json({ message: "Geçersiz sosyal link formatı" });
       }
 
+      // socialLinks nesnesini garanti et
+      if (!user.socialLinks) {
+        user.socialLinks = {};
+      }
+
       if (socialLinks.linkedin !== undefined) {
         if (typeof socialLinks.linkedin !== "string") {
           return res.status(400).json({ message: "LinkedIn URL string olmalıdır" });

@@ -8,10 +8,10 @@ const NoteSchema = new mongoose.Schema({
   year: { type: String },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   universityId: { type: mongoose.Schema.Types.ObjectId, ref: "University", required: true },
-  likes: { type: Number, default: 0 },
-  dislikes: { type: Number, default: 0 },
-  reports: { type: Number, default: 0 },
-  viewCount: { type: Number, default: 0 },
+  likes: { type: Number, default: 0, min: 0 },
+  dislikes: { type: Number, default: 0, min: 0 },
+  reports: { type: Number, default: 0, min: 0 },
+  viewCount: { type: Number, default: 0, min: 0 },
   description: { type: String, maxlength: 550 },
   isActive: { type: Boolean, default: true }
 }, { timestamps: true });

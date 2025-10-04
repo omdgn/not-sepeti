@@ -19,8 +19,8 @@ const addComment = async (req, res) => {
     }
 
     const note = await Note.findById(noteId);
-    if (!note) {
-      return res.status(404).json({ message: "Not bulunamadı" });
+    if (!note || !note.isActive) {
+      return res.status(404).json({ message: "Not bulunamadı veya aktif değil" });
     }
 
     if (note.universityId.toString() !== userUniversityId.toString()) {
@@ -104,8 +104,8 @@ const getCommentsForNote = async (req, res) => {
     const userUniversityId = req.user.universityId;
 
     const note = await Note.findById(noteId);
-    if (!note) {
-      return res.status(404).json({ message: "Not bulunamadı" });
+    if (!note || !note.isActive) {
+      return res.status(404).json({ message: "Not bulunamadı veya aktif değil" });
     }
 
     if (note.universityId.toString() !== userUniversityId.toString()) {

@@ -12,9 +12,12 @@ const validateUniversityAccess = async (targetType, targetId, userUniversityId) 
 
   if (targetType === "notes") {
     // Note için direkt universityId kontrolü
-    const note = await Model.findById(targetId).select('universityId createdBy');
+    const note = await Model.findById(targetId).select('universityId createdBy isActive');
     if (!note) {
       return { valid: false, message: "Not bulunamadı", statusCode: 404 };
+    }
+    if (!note.isActive) {
+      return { valid: false, message: "Not aktif değil", statusCode: 404 };
     }
     if (note.universityId.toString() !== userUniversityId.toString()) {
       return { valid: false, message: "Bu nota erişim yetkiniz yok", statusCode: 403 };

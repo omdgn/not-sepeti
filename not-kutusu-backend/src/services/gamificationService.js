@@ -135,8 +135,8 @@ const checkAndAwardBadges = async (userId) => {
       // 📢 Her yeni rozet için bildirim gönder
       const notificationService = require("./notificationService");
       // io'yu almak için global app instance gerekebilir, şimdilik null
-      for (const badgeId of awardedBadges) {
-        const badge = BADGES[badgeId];
+      for (const badge of awardedBadges) {
+        // awardedBadges zaten badge nesneleri içeriyor
         await notificationService.createBadgeNotification(userId, badge, global.io);
       }
     }

@@ -30,8 +30,11 @@ const UserSchema = new mongoose.Schema({
   aboutMe: { type: String }, // 🆕 Hakkında
   department: { type: String }, // 🆕 Bölüm
   socialLinks: {                // 🆕 Sosyal linkler
-    linkedin: { type: String },
-    github: { type: String }
+    type: {
+      linkedin: { type: String },
+      github: { type: String }
+    },
+    default: {}                 // Default boş nesne
   },
   notifications: { type: Boolean, default: true }, // 🆕 Bildirim tercihi
 

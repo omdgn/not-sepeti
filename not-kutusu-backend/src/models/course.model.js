@@ -17,7 +17,7 @@ const CourseSchema = new mongoose.Schema({
     ref: "University",
     required: true
   },
-  noteCount: { type: Number, default: 0 }
+  noteCount: { type: Number, default: 0, min: 0 }
 }, { timestamps: true });
 
 // Indexes
