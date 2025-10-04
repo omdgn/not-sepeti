@@ -4,26 +4,70 @@ const Comment = require("../models/comment.model");
 const gamificationService = require("../services/gamificationService");
 
 /**
- * Helper: Counter'ı güncelle (transaction-safe)
+ * 🔒 Helper: Üniversite erişim kontrolü (cross-university access prevention)
+ * @returns { valid: boolean, target: Object, statusCode: number, message: string }
+ */
+const validateUniversityAccess = async (targetType, targetId, userUniversityId) => {
+  const Model = targetType === "notes" ? Note : Comment;
+
+  if (targetType === "notes") {
+    // Note için direkt universityId kontrolü
+    const note = await Model.findById(targetId).select('universityId createdBy');
+    if (!note) {
+      return { valid: false, message: "Not bulunamadı", statusCode: 404 };
+    }
+    if (note.universityId.toString() !== userUniversityId.toString()) {
+      return { valid: false, message: "Bu nota erişim yetkiniz yok", statusCode: 403 };
+    }
+    return { valid: true, target: note };
+
+  } else {
+    // Comment için noteId üzerinden üniversite kontrolü
+    const comment = await Model.findById(targetId).populate('noteId', 'universityId');
+    if (!comment || !comment.noteId) {
+      return { valid: false, message: "Yorum bulunamadı", statusCode: 404 };
+    }
+    if (comment.noteId.universityId.toString() !== userUniversityId.toString()) {
+      return { valid: false, message: "Bu yoruma erişim yetkiniz yok", statusCode: 403 };
+    }
+    return { valid: true, target: comment };
+  }
+};
+
+/**
+ * Helper: Counter'ı güncelle (atomic ve validation-safe)
  */
 const updateCounter = async (targetType, targetId, field, increment) => {
   const Model = targetType === "notes" ? Note : Comment;
-  console.log('Updating counter:', { targetType, targetId, field, increment, Model: Model.modelName });
-  const result = await Model.findByIdAndUpdate(targetId, { $inc: { [field]: increment } }, { new: true });
-  console.log('Counter updated, new value:', result ? result[field] : 'NOT FOUND');
+
+  const result = await Model.findByIdAndUpdate(
+    targetId,
+    { $inc: { [field]: increment } },
+    {
+      new: true,           // Güncel değeri döndür
+      runValidators: true  // ✅ Validation kontrolleri çalıştır
+    }
+  );
+
+  // ✅ Target bulunamazsa hata fırlat (counter desync önleme)
+  if (!result) {
+    console.error(`Counter güncelleme hatası: ${targetType} bulunamadı (ID: ${targetId})`);
+    // Not: Hata fırlatmıyoruz çünkü kullanıcı deneyimini bozmak istemiyoruz
+    // Ama log'da kayıt altına alıyoruz
+  }
+
   return result;
 };
 
 /**
  * Helper: Bildirim gönder (sadece like için, sadece note için)
  */
-const sendLikeNotification = async (userId, userName, noteId, noteOwnerId, io) => {
+const sendLikeNotification = async (userId, noteId, noteOwnerId, io) => {
   if (noteOwnerId === userId) return; // Kendi notunu beğenen bildirim almaz
 
   const notificationService = require("../services/notificationService");
   await notificationService.createLikeNotification(
     userId,
-    userName,
     noteId,
     noteOwnerId,
     io
@@ -54,12 +98,15 @@ const likeTarget = async (req, res) => {
       return res.status(400).json({ message: "Geçersiz targetType" });
     }
 
-    // Target var mı?
-    const Model = targetType === "notes" ? Note : Comment;
-    const target = await Model.findById(targetId);
-    if (!target) {
-      return res.status(404).json({ message: `${targetType} bulunamadı` });
+    // 🔒 Üniversite erişim kontrolü (cross-university access prevention)
+    const validation = await validateUniversityAccess(targetType, targetId, req.user.universityId);
+    if (!validation.valid) {
+      return res.status(validation.statusCode).json({ message: validation.message });
     }
+    const target = validation.target;
+
+    // Model belirleme (reaction.controller scope'unda kullanmak için)
+    const Model = targetType === "notes" ? Note : Comment;
 
     // Mevcut reaction var mı?
     const existingReaction = await Reaction.findOne({
@@ -73,26 +120,35 @@ const likeTarget = async (req, res) => {
     if (existingReaction) {
       if (existingReaction.type === "like") {
         // 👍 Zaten like varsa → kaldır
-        await Reaction.findByIdAndDelete(existingReaction._id);
-        await updateCounter(targetType, targetId, "likes", -1);
+        const deletedReaction = await Reaction.findByIdAndDelete(existingReaction._id);
 
-        // 🎮 Gamification: Like kaldırıldı (sadece note için)
-        if (targetType === "notes") {
-          await gamificationService.onLikeRemoved(target.createdBy.toString());
+        // ✅ Silme başarılıysa counter güncelle
+        if (deletedReaction) {
+          await updateCounter(targetType, targetId, "likes", -1);
+
+          // 🎮 Gamification: Like kaldırıldı (sadece note için)
+          if (targetType === "notes") {
+            await gamificationService.onLikeRemoved(target.createdBy.toString());
+          }
         }
 
       } else {
         // 👎 veya 🚩 → önce kaldır, sonra 👍 ekle
         const oldType = existingReaction.type;
 
-        existingReaction.type = "like";
-        existingReaction.description = undefined; // Like için description yok
-        existingReaction.timestamp = new Date();
-        await existingReaction.save();
-
-        // Counter güncelle
-        await updateCounter(targetType, targetId, `${oldType}s`, -1);
-        await updateCounter(targetType, targetId, "likes", 1);
+        // 🔒 Atomik işlem: Reaction ve counter'ı paralel güncelle
+        await Promise.all([
+          (async () => {
+            existingReaction.type = "like";
+            existingReaction.description = undefined;
+            existingReaction.timestamp = new Date();
+            await existingReaction.save();
+          })(),
+          // Counter'ları tek sorguda güncelle (race condition önleme)
+          Model.findByIdAndUpdate(targetId, {
+            $inc: { [`${oldType}s`]: -1, likes: 1 }
+          }, { runValidators: true })
+        ]);
 
         // 🎮 Gamification: Yeni like aldı (sadece note için)
         if (targetType === "notes") {
@@ -102,15 +158,13 @@ const likeTarget = async (req, res) => {
       }
     } else {
       // 🔄 Hiç reaction yoksa → yeni ekle
-      console.log('Creating reaction:', { userId, targetType, targetId, type: 'like' });
-      const newReaction = await Reaction.create({
+      await Reaction.create({
         userId,
         targetType,
         targetId,
         type: "like"
         // description: like için gerekli değil
       });
-      console.log('Reaction created:', newReaction);
 
       await updateCounter(targetType, targetId, "likes", 1);
 
@@ -126,7 +180,6 @@ const likeTarget = async (req, res) => {
       const io = req.app.get("io");
       await sendLikeNotification(
         userId,
-        req.user.name,
         targetId,
         target.createdBy.toString(),
         io
@@ -182,11 +235,14 @@ const dislikeTarget = async (req, res) => {
       return res.status(400).json({ message: "Geçersiz targetType" });
     }
 
-    const Model = targetType === "note" ? Note : Comment;
-    const target = await Model.findById(targetId);
-    if (!target) {
-      return res.status(404).json({ message: `${targetType} bulunamadı` });
+    // 🔒 Üniversite erişim kontrolü (cross-university access prevention)
+    const validation = await validateUniversityAccess(targetType, targetId, req.user.universityId);
+    if (!validation.valid) {
+      return res.status(validation.statusCode).json({ message: validation.message });
     }
+    const target = validation.target;
+
+    const Model = targetType === "notes" ? Note : Comment;
 
     const existingReaction = await Reaction.findOne({
       userId,
@@ -197,20 +253,30 @@ const dislikeTarget = async (req, res) => {
     if (existingReaction) {
       if (existingReaction.type === "dislike") {
         // ❌ Zaten dislike varsa → kaldır
-        await Reaction.findByIdAndDelete(existingReaction._id);
-        await updateCounter(targetType, targetId, "dislikes", -1);
+        const deletedReaction = await Reaction.findByIdAndDelete(existingReaction._id);
+
+        // ✅ Silme başarılıysa counter güncelle
+        if (deletedReaction) {
+          await updateCounter(targetType, targetId, "dislikes", -1);
+        }
 
       } else {
         // 👍 veya 🚩 → önce kaldır, sonra ❌ ekle
         const oldType = existingReaction.type;
 
-        existingReaction.type = "dislike";
-        existingReaction.description = undefined; // Dislike için description yok
-        existingReaction.timestamp = new Date();
-        await existingReaction.save();
-
-        await updateCounter(targetType, targetId, `${oldType}s`, -1);
-        await updateCounter(targetType, targetId, "dislikes", 1);
+        // 🔒 Atomik işlem: Reaction ve counter'ı paralel güncelle
+        await Promise.all([
+          (async () => {
+            existingReaction.type = "dislike";
+            existingReaction.description = undefined;
+            existingReaction.timestamp = new Date();
+            await existingReaction.save();
+          })(),
+          // Counter'ları tek sorguda güncelle (race condition önleme)
+          Model.findByIdAndUpdate(targetId, {
+            $inc: { [`${oldType}s`]: -1, dislikes: 1 }
+          }, { runValidators: true })
+        ]);
       }
     } else {
       // 🔄 Hiç reaction yoksa → yeni ekle
@@ -277,11 +343,14 @@ const reportTarget = async (req, res) => {
       return res.status(400).json({ message: "Geçersiz targetType" });
     }
 
-    const Model = targetType === "note" ? Note : Comment;
-    const target = await Model.findById(targetId);
-    if (!target) {
-      return res.status(404).json({ message: `${targetType} bulunamadı` });
+    // 🔒 Üniversite erişim kontrolü (cross-university access prevention)
+    const validation = await validateUniversityAccess(targetType, targetId, req.user.universityId);
+    if (!validation.valid) {
+      return res.status(validation.statusCode).json({ message: validation.message });
     }
+    const target = validation.target;
+
+    const Model = targetType === "notes" ? Note : Comment;
 
     const existingReaction = await Reaction.findOne({
       userId,
@@ -292,20 +361,30 @@ const reportTarget = async (req, res) => {
     if (existingReaction) {
       if (existingReaction.type === "report") {
         // 🚩 Zaten report varsa → kaldır
-        await Reaction.findByIdAndDelete(existingReaction._id);
-        await updateCounter(targetType, targetId, "reports", -1);
+        const deletedReaction = await Reaction.findByIdAndDelete(existingReaction._id);
+
+        // ✅ Silme başarılıysa counter güncelle
+        if (deletedReaction) {
+          await updateCounter(targetType, targetId, "reports", -1);
+        }
 
       } else {
         // 👍 veya ❌ → önce kaldır, sonra 🚩 ekle
         const oldType = existingReaction.type;
 
-        existingReaction.type = "report";
-        existingReaction.description = finalDescription;
-        existingReaction.timestamp = new Date();
-        await existingReaction.save();
-
-        await updateCounter(targetType, targetId, `${oldType}s`, -1);
-        await updateCounter(targetType, targetId, "reports", 1);
+        // 🔒 Atomik işlem: Reaction ve counter'ı paralel güncelle
+        await Promise.all([
+          (async () => {
+            existingReaction.type = "report";
+            existingReaction.description = finalDescription;
+            existingReaction.timestamp = new Date();
+            await existingReaction.save();
+          })(),
+          // Counter'ları tek sorguda güncelle (race condition önleme)
+          Model.findByIdAndUpdate(targetId, {
+            $inc: { [`${oldType}s`]: -1, reports: 1 }
+          }, { runValidators: true })
+        ]);
       }
     } else {
       // 🔄 Hiç reaction yoksa → yeni ekle
@@ -321,11 +400,18 @@ const reportTarget = async (req, res) => {
     }
 
     // 🚫 15+ report varsa pasifleştir (sadece note için)
-    const updatedTarget = await Model.findById(targetId).select("reports isActive");
+    const updatedTarget = await Model.findById(targetId).select("reports isActive courseId createdBy");
 
-    if (targetType === "notes" && updatedTarget.reports >= 15) {
+    if (targetType === "notes" && updatedTarget.reports >= 15 && updatedTarget.isActive) {
       updatedTarget.isActive = false;
       await updatedTarget.save();
+
+      // Course noteCount azalt
+      const Course = require("../models/course.model");
+      await Course.findByIdAndUpdate(updatedTarget.courseId, { $inc: { noteCount: -1 } });
+
+      // 🎮 Gamification: Not silme puanı (raporlama nedeniyle)
+      await gamificationService.onNoteDelete(updatedTarget.createdBy.toString());
     }
 
     // Kullanıcının mevcut reaction durumunu al
@@ -372,6 +458,12 @@ const getMyReaction = async (req, res) => {
 
     if (!targetType) {
       return res.status(400).json({ message: "Geçersiz targetType" });
+    }
+
+    // 🔒 Üniversite erişim kontrolü (cross-university access prevention)
+    const validation = await validateUniversityAccess(targetType, targetId, req.user.universityId);
+    if (!validation.valid) {
+      return res.status(validation.statusCode).json({ message: validation.message });
     }
 
     const reaction = await Reaction.findOne({

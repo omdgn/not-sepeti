@@ -47,6 +47,12 @@ const UserSchema = new mongoose.Schema({
   resetPasswordToken: { type: String },
   resetPasswordExpires: { type: Date },
 
+  // 🔒 Token versiyonu - şifre değiştiğinde artırılır
+  tokenVersion: { type: Number, default: 0 },
+
+  // 📅 Son giriş tarihi
+  lastLogin: { type: Date },
+
   role: { type: String, enum: ["user", "admin"], default: "user" },
 
 }, { timestamps: true });

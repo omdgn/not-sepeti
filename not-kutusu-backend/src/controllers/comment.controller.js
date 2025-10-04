@@ -44,7 +44,6 @@ const addComment = async (req, res) => {
     const io = req.app.get("io");
     await notificationService.createCommentNotification(
       userId,
-      req.user.name,
       text.trim(),
       noteId,
       note.createdBy.toString(),
@@ -71,9 +70,11 @@ const deleteComment = async (req, res) => {
       return res.status(404).json({ message: "Yorum bulunamadı" });
     }
 
-    // Üniversite kontrolü
-    if (comment.noteId.universityId.toString() !== req.user.universityId.toString()) {
-      return res.status(403).json({ message: "Bu yoruma erişim yetkiniz yok" });
+    // Admin değilse üniversite kontrolü yap
+    if (req.user.role !== "admin" && req.user.universityId) {
+      if (comment.noteId.universityId.toString() !== req.user.universityId.toString()) {
+        return res.status(403).json({ message: "Bu yoruma erişim yetkiniz yok" });
+      }
     }
 
     // Kullanıcı kendisine ait mi?
@@ -94,10 +95,11 @@ const deleteComment = async (req, res) => {
 };
 
 
-// 🟡 Notun yorumlarını getir
+// 🟡 Notun yorumlarını getir (pagination ile)
 const getCommentsForNote = async (req, res) => {
   try {
     const { noteId } = req.params;
+    const { page = 1, limit = 50 } = req.query;
     const userId = req.user.userId;
     const userUniversityId = req.user.universityId;
 
@@ -110,9 +112,19 @@ const getCommentsForNote = async (req, res) => {
       return res.status(403).json({ message: "Bu nota erişim izniniz yok" });
     }
 
+    // Pagination
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Toplam yorum sayısı
+    const total = await Comment.countDocuments({ noteId });
+
     const comments = await Comment.find({ noteId })
       .populate("userId", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
     // 🆕 Tüm yorumlar için kullanıcının reaction'larını tek sorguda çek
     const Reaction = require("../models/reaction.model");
@@ -120,7 +132,7 @@ const getCommentsForNote = async (req, res) => {
 
     const reactions = await Reaction.find({
       userId: userId,
-      targetType: "comment",
+      targetType: "comments",
       targetId: { $in: commentIds }
     }).select("targetId type description timestamp");
 
@@ -137,7 +149,15 @@ const getCommentsForNote = async (req, res) => {
       };
     });
 
-    res.json({ comments: commentsWithReactions });
+    res.json({
+      comments: commentsWithReactions,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum)
+      }
+    });
   } catch (err) {
     console.error("Yorum listeleme hatası:", err);
     res.status(500).json({ message: "Sunucu hatası" });

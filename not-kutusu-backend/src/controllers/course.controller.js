@@ -3,11 +3,14 @@ const Course = require("../models/course.model");
 // Yeni ders oluştur (Admin)
 const createCourse = async (req, res) => {
   try {
-    const { code } = req.body;
-    const universityId = req.user.universityId;
+    const { code, universityId } = req.body;
 
     if (!code) {
       return res.status(400).json({ message: "Ders kodu zorunludur" });
+    }
+
+    if (!universityId) {
+      return res.status(400).json({ message: "Üniversite ID zorunludur" });
     }
 
     // Normalize

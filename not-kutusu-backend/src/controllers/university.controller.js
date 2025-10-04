@@ -13,7 +13,8 @@ const getAllUniversities = async (req, res) => {
           from: "Course",
           localField: "_id",
           foreignField: "universityId",
-          as: "courses"
+          as: "courses",
+          pipeline: [{ $project: { _id: 1 } }] // Sadece ID'leri çek
         }
       },
       {
@@ -21,7 +22,8 @@ const getAllUniversities = async (req, res) => {
           from: "Note",
           localField: "_id",
           foreignField: "universityId",
-          as: "notes"
+          as: "notes",
+          pipeline: [{ $project: { _id: 1 } }] // Sadece ID'leri çek
         }
       },
       {

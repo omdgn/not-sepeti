@@ -6,6 +6,11 @@ const User = require("../models/user.model");
 const DepartmentCode = require("../models/departmentCode.model");
 const gamificationService = require("../services/gamificationService");
 
+// 🔒 Regex escape helper - ReDoS koruması
+const escapeRegex = (str) => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 // 🔒 URL doğrulama helper
 const isValidURL = (url) => {
   try {
@@ -62,23 +67,33 @@ const uploadNote = async (req, res) => {
       semester
     } = req.body;
 
-    // 1. Description karakter limiti kontrolü
+    // 1. Title karakter limiti kontrolü
+    if (!title || title.trim().length < 3 || title.trim().length > 200) {
+      return res.status(400).json({ message: "Başlık 3-200 karakter arası olmalıdır" });
+    }
+
+    // 2. Instructor karakter limiti kontrolü
+    if (instructor && instructor.trim().length > 100) {
+      return res.status(400).json({ message: "Eğitmen adı maksimum 100 karakter olabilir" });
+    }
+
+    // 3. Description karakter limiti kontrolü
     if (description && description.length > 500) {
       return res.status(400).json({ message: "Açıklama 500 karakterden uzun olamaz" });
     }
 
-    // 2. URL geçerli mi?
+    // 4. URL geçerli mi?
     if (!isValidURL(driveLink)) {
       return res.status(400).json({ message: "Geçersiz veya izin verilmeyen link." });
     }
 
-    // 3. Dosya erişilebilir ve boş değil mi?
+    // 5. Dosya erişilebilir ve boş değil mi?
     const fileOk = await checkFileAccessible(driveLink);
     if (!fileOk) {
       return res.status(400).json({ message: "Dosya erişilemiyor veya çok küçük (boş)." });
     }
 
-    // 4. Course kodunu oluştur ve normalize et
+    // 6. Course kodunu oluştur ve normalize et
     let finalCourseCode;
 
     if (courseFormat === "split") {
@@ -120,7 +135,7 @@ const uploadNote = async (req, res) => {
       return res.status(400).json({ message: "Geçersiz ders kodu" });
     }
 
-    // 5. DepartmentCode kaydet
+    // 7. DepartmentCode kaydet
     if (courseFormat === "split" && departmentCode) {
       // Split format: departmentCode'u kaydet (COMP)
       await DepartmentCode.findOneAndUpdate(
@@ -153,7 +168,7 @@ const uploadNote = async (req, res) => {
       );
     }
 
-    // 6. Course bul veya oluştur (ATOMIC)
+    // 8. Course bul veya oluştur (noteCount artırmadan)
     const course = await Course.findOneAndUpdate(
       {
         code: finalCourseCode,
@@ -162,8 +177,7 @@ const uploadNote = async (req, res) => {
       {
         code: finalCourseCode,
         type: courseFormat, // "split" veya "single"
-        universityId: req.user.universityId,
-        $inc: { noteCount: 1 } // Aynı sorguda artır
+        universityId: req.user.universityId
       },
       {
         upsert: true, // Yoksa oluştur
@@ -171,10 +185,10 @@ const uploadNote = async (req, res) => {
       }
     );
 
-    // 7. Yıl formatını oluştur
+    // 9. Yıl formatını oluştur
     const formattedYear = year && semester ? `${year} - ${semester}` : year;
 
-    // 8. Not kaydet
+    // 10. Not kaydet
     const newNote = await Note.create({
       title,
       description,
@@ -186,7 +200,10 @@ const uploadNote = async (req, res) => {
       universityId: req.user.universityId
     });
 
-    // 9. 🎮 Gamification: Not yükleme puanı
+    // 11. Not başarıyla kaydedildiyse noteCount'u artır
+    await Course.findByIdAndUpdate(course._id, { $inc: { noteCount: 1 } });
+
+    // 12. 🎮 Gamification: Not yükleme puanı
     await gamificationService.onNoteUpload(req.user.userId);
 
     res.status(201).json({
@@ -253,7 +270,7 @@ const getNoteById = async (req, res) => {
   try {
     const note = await Note.findById(req.params.id)
       .populate("courseId", "code name")
-      .populate("createdBy", "name email");
+      .populate("createdBy", "name");
 
     if (!note) {
       return res.status(404).json({ message: "Not bulunamadı" });
@@ -264,8 +281,11 @@ const getNoteById = async (req, res) => {
       return res.status(404).json({ message: "Not bulunamadı" });
     }
 
-    if (note.universityId.toString() !== req.user.universityId.toString()) {
-      return res.status(403).json({ message: "Erişim yetkiniz yok" });
+    // Admin değilse üniversite kontrolü yap
+    if (req.user.role !== "admin" && req.user.universityId) {
+      if (note.universityId.toString() !== req.user.universityId.toString()) {
+        return res.status(403).json({ message: "Erişim yetkiniz yok" });
+      }
     }
 
     // Görüntülenme sayısını artır
@@ -276,7 +296,7 @@ const getNoteById = async (req, res) => {
     const Reaction = require("../models/reaction.model");
     const myReaction = await Reaction.findOne({
       userId: req.user.userId,
-      targetType: "note",
+      targetType: "notes",
       targetId: req.params.id
     }).select("type description timestamp");
 
@@ -413,38 +433,23 @@ const searchNotes = async (req, res) => {
       return res.status(403).json({ message: "Bu üniversiteye erişim izniniz yok." });
     }
 
-    const regex = new RegExp(q, "i");
+    // Regex escape (ReDoS korumalı)
+    const regex = new RegExp(escapeRegex(q), "i");
 
-    // Course eşleşmeleri (name, code)
-    const matchedCourses = await Course.find({
-      universityId: university._id,
-      $or: [{ name: regex }, { code: regex }]
-    }).select("_id");
-
-    // User eşleşmeleri (name)
-    const matchedUsers = await User.find({
-      universityId: university._id,
-      name: regex
-    }).select("_id");
-
-    const matchedCourseIds = matchedCourses.map(c => c._id);
-    const matchedUserIds = matchedUsers.map(u => u._id);
-
+    // İndeksli filtre önce (composite index kullanır: universityId + isActive)
     const notes = await Note.find({
       universityId: university._id,
       isActive: true,
       $or: [
         { title: regex },
         { description: regex },
-        { instructor: regex },
-        { year: regex },
-        { courseId: { $in: matchedCourseIds } },
-        { createdBy: { $in: matchedUserIds } }
+        { instructor: regex }
       ]
     })
       .populate("courseId", "code name")
       .populate("createdBy", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(100); // Arama sonuçlarını sınırla
 
     res.status(200).json({ notes });
   } catch (err) {
@@ -469,59 +474,42 @@ const searchNotesWithSearchBar = async (req, res) => {
       return res.status(403).json({ message: "Bu üniversiteye erişim izniniz yok." });
     }
 
-    // Türkçe karakter normalizasyonu için yardımcı fonksiyon
-    const normalizeTurkish = (text) => {
-      return text
-        .replace(/ı/gi, '[iıİI]')
-        .replace(/i/gi, '[iıİI]')
-        .replace(/ş/gi, '[şsŞS]')
-        .replace(/ğ/gi, '[ğgĞG]')
-        .replace(/ü/gi, '[üuÜU]')
-        .replace(/ö/gi, '[öoÖO]')
-        .replace(/ç/gi, '[çcÇC]');
-    };
-
-    const normalizedQuery = normalizeTurkish(q);
-    const regex = new RegExp(normalizedQuery, "i");
-
-    // Course code eşleşmeleri
-    const matchedCourses = await Course.find({
-      universityId: university._id,
-      code: regex
-    }).select("_id");
-
-    const matchedCourseIds = matchedCourses.map(c => c._id);
-
     // Pagination hesaplamaları
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    // Toplam sonuç sayısı
-    const totalResults = await Note.countDocuments({
+    // Basit regex escape (ReDoS korumalı)
+    const escapedQuery = escapeRegex(q);
+    const regex = new RegExp(escapedQuery, "i");
+
+    // İndeksli filtre önce (universityId + isActive composite index kullanır)
+    const baseQuery = {
       universityId: university._id,
-      isActive: true,
+      isActive: true
+    };
+
+    // Toplam sonuç sayısı (indexed field ile başlar)
+    const totalResults = await Note.countDocuments({
+      ...baseQuery,
       $or: [
         { title: regex },
         { description: regex },
-        { instructor: regex },
-        { courseId: { $in: matchedCourseIds } }
+        { instructor: regex }
       ]
     });
 
-    // Notları getir
+    // Notları getir (indexed field ile başlar, limit ile sınırlı)
     const notes = await Note.find({
-      universityId: university._id,
-      isActive: true,
+      ...baseQuery,
       $or: [
         { title: regex },
         { description: regex },
-        { instructor: regex },
-        { courseId: { $in: matchedCourseIds } }
+        { instructor: regex }
       ]
     })
       .populate("courseId", "code name")
-      .populate("createdBy", "name email")
+      .populate("createdBy", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum);

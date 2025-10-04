@@ -6,8 +6,12 @@ const UserSuggestion = require("../models/userSuggestion.model");
 const gamificationService = require("../services/gamificationService");
 
 const bcrypt = require("bcryptjs");
-const { generateToken } = require("../utils/jwt"); 
+const { generateToken } = require("../utils/jwt");
 
+// 🔒 Regex escape helper - ReDoS koruması
+const escapeRegex = (str) => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
 
 // 🔒 Admin kontrolü
 const checkAdmin = (req, res) => {
@@ -42,7 +46,8 @@ const adminLogin = async (req, res) => {
 
     const token = generateToken({
       userId: user._id,
-      role: user.role
+      role: user.role,
+      tokenVersion: user.tokenVersion
     });
 
     res.status(200).json({
@@ -140,11 +145,14 @@ const getReportedNotes = async (req, res) => {
     const notAdmin = checkAdmin(req, res);
     if (notAdmin) return notAdmin;
 
+    const limit = parseInt(req.query.limit) || 50;
+
     const notes = await Note.find({ reports: { $gt: 0 } })
       .populate("createdBy", "name email")
       .populate("courseId", "code name")
       .populate("universityId", "name slug")
-      .sort({ reports: -1, createdAt: -1 });
+      .sort({ reports: -1, createdAt: -1 })
+      .limit(limit);
 
     res.json({ notes });
   } catch (err) {
@@ -159,11 +167,14 @@ const getInactiveNotes = async (req, res) => {
     const notAdmin = checkAdmin(req, res);
     if (notAdmin) return notAdmin;
 
+    const limit = parseInt(req.query.limit) || 50;
+
     const notes = await Note.find({ isActive: false })
       .populate("createdBy", "name email")
       .populate("courseId", "code name")
       .populate("universityId", "name slug")
-      .sort({ reports: -1, createdAt: -1 });
+      .sort({ reports: -1, createdAt: -1 })
+      .limit(limit);
 
     res.json({ notes });
   } catch (err) {
@@ -187,6 +198,10 @@ const activateNote = async (req, res) => {
       .populate("courseId", "code name");
 
     if (!note) return res.status(404).json({ message: "Not bulunamadı" });
+
+    // Course noteCount'u artır (restore edildiği için)
+    const Course = require("../models/course.model");
+    await Course.findByIdAndUpdate(note.courseId._id, { $inc: { noteCount: 1 } });
 
     res.json({ message: "Not aktifleştirildi ve raporlar sıfırlandı", note });
   } catch (err) {
@@ -223,11 +238,16 @@ const deleteNoteByAdmin = async (req, res) => {
     if (!note) return res.status(404).json({ message: "Not bulunamadı" });
 
     const noteOwnerId = note.createdBy.toString();
+    const courseId = note.courseId;
 
     await Note.findByIdAndDelete(req.params.id);
 
     // 🎮 Gamification: Not silme puanı
     await gamificationService.onNoteDelete(noteOwnerId);
+
+    // Course noteCount'u azalt (kalıcı silindiği için)
+    const Course = require("../models/course.model");
+    await Course.findByIdAndUpdate(courseId, { $inc: { noteCount: -1 } });
 
     res.json({ message: "Not admin tarafından silindi" });
   } catch (err) {
@@ -435,7 +455,7 @@ const adminSearchNotesWithSearchBar = async (req, res) => {
       return res.status(400).json({ message: "Arama terimi gerekli." });
     }
 
-    const regex = new RegExp(q, "i");
+    const regex = new RegExp(escapeRegex(q), "i");
     const Course = require("../models/course.model");
 
     let filter = {};
@@ -517,7 +537,7 @@ const getAllUsers = async (req, res) => {
 
     // Arama filtresi (isim veya email)
     if (search) {
-      const regex = new RegExp(search, "i");
+      const regex = new RegExp(escapeRegex(search), "i");
       filter.$or = [
         { name: regex },
         { email: regex }

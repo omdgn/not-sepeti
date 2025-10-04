@@ -64,6 +64,16 @@ const generalLimiter = rateLimit({
   legacyHeaders: false
 });
 
+// 🔐 Admin login limiter - Daha sıkı güvenlik
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 dakika
+  max: 3, // Sadece 3 deneme (normal kullanıcıdan daha az)
+  message: { message: "Çok fazla admin giriş denemesi yapıldı. Lütfen 15 dakika sonra tekrar deneyin." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true // Başarılı login'ler sayılmaz
+});
+
 // 🛡 Auth işlemleri için özel limiter (backward compatibility)
 const authLimiter = loginLimiter;
 
@@ -75,5 +85,6 @@ module.exports = {
   passwordResetLimiter,
   profilePasswordChangeLimiter,
   generalLimiter,
-  authLimiter // backward compatibility
+  authLimiter, // backward compatibility
+  adminLoginLimiter
 };

@@ -12,10 +12,15 @@ const authMiddleware = async (req, res, next) => {
     // Token çöz
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Kullanıcıyı DB’den çek
-    const user = await User.findById(decoded.userId).select("_id universityId role isActive");
+    // Kullanıcıyı DB'den çek
+    const user = await User.findById(decoded.userId).select("_id universityId role isActive tokenVersion");
     if (!user) {
       return res.status(401).json({ message: "Geçersiz kullanıcı." });
+    }
+
+    // Token versiyonu kontrolü - şifre değiştiğinde eski token'lar geçersiz olur
+    if (decoded.tokenVersion !== user.tokenVersion) {
+      return res.status(401).json({ message: "Token geçersiz. Lütfen tekrar giriş yapın." });
     }
 
     // Kullanıcı pasifse (banlanmış)

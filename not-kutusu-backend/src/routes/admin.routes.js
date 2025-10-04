@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
+const { adminLoginLimiter } = require("../middleware/rateLimiter");
 const {
   getReportedNotes,
   getInactiveNotes,
@@ -32,7 +33,7 @@ const {
 } = require("../controllers/departmentCode.controller");
 
 // 📌 Bu route dışındaki her şey token ister!
-router.post("/login", adminLogin); // -> /api/admin/login
+router.post("/login", adminLoginLimiter, adminLogin); // -> /api/admin/login
 
 // 🔐 Tüm diğer admin endpoint'leri için token kontrolü
 router.use(authMiddleware);

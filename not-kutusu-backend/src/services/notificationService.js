@@ -3,7 +3,7 @@ const User = require("../models/user.model");
 const { emitToUser } = require("./socketService");
 
 // ❤️ Beğeni Bildirimi (Aggregated)
-const createLikeNotification = async (fromUserId, fromUserName, noteId, noteCreatedBy, io) => {
+const createLikeNotification = async (fromUserId, noteId, noteCreatedBy, io) => {
   try {
     // Kendi notunu beğenirse bildirim gönderme
     if (fromUserId.toString() === noteCreatedBy.toString()) {
@@ -27,7 +27,7 @@ const createLikeNotification = async (fromUserId, fromUserName, noteId, noteCrea
         $inc: { count: 1 },
         $push: {
           lastActors: {
-            $each: [{ userId: fromUserId, name: fromUserName }],
+            $each: [{ userId: fromUserId }],
             $position: 0, // Başa ekle
             $slice: 3 // Max 3 kişi
           }
@@ -44,8 +44,8 @@ const createLikeNotification = async (fromUserId, fromUserName, noteId, noteCrea
     // Socket.io emit
     if (io) {
       const message = notification.count === 1
-        ? `${fromUserName} notunuzu beğendi`
-        : `${fromUserName} ve ${notification.count - 1} kişi daha notunuzu beğendi`;
+        ? "Notunuz beğenildi"
+        : `Notunuz ${notification.count} kişi tarafından beğenildi`;
 
       emitToUser(io, noteCreatedBy, "notification", {
         type: "like",
@@ -62,7 +62,7 @@ const createLikeNotification = async (fromUserId, fromUserName, noteId, noteCrea
 };
 
 // 💬 Yorum Bildirimi (Aggregated)
-const createCommentNotification = async (fromUserId, fromUserName, commentText, noteId, noteCreatedBy, io) => {
+const createCommentNotification = async (fromUserId, commentText, noteId, noteCreatedBy, io) => {
   try {
     // Kendi notuna yorum yaparsa bildirim gönderme
     if (fromUserId.toString() === noteCreatedBy.toString()) {
@@ -86,7 +86,7 @@ const createCommentNotification = async (fromUserId, fromUserName, commentText, 
         $inc: { count: 1 },
         $push: {
           lastActors: {
-            $each: [{ userId: fromUserId, name: fromUserName }],
+            $each: [{ userId: fromUserId }],
             $position: 0,
             $slice: 3
           }
@@ -104,8 +104,8 @@ const createCommentNotification = async (fromUserId, fromUserName, commentText, 
     // Socket.io emit
     if (io) {
       const message = notification.count === 1
-        ? `${fromUserName} notunuza yorum yaptı: "${notification.lastComment}"`
-        : `${fromUserName} ve ${notification.count - 1} kişi daha notunuza yorum yaptı`;
+        ? `Notunuza yorum yapıldı: "${notification.lastComment}"`
+        : `Notunuza ${notification.count} yorum yapıldı`;
 
       emitToUser(io, noteCreatedBy, "notification", {
         type: "comment",

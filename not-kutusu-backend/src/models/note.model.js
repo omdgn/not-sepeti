@@ -28,5 +28,9 @@ NoteSchema.index({
   year: "text"
 });
 
+// Compound indexes for performance optimization
+NoteSchema.index({ universityId: 1, isActive: 1, createdAt: -1 });
+NoteSchema.index({ universityId: 1, isActive: 1, likes: -1 });
+
 
 module.exports = mongoose.model("Note", NoteSchema, "Note");

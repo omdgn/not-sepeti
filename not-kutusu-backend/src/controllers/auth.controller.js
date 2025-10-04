@@ -202,7 +202,8 @@ const login = async (req, res) => {
     const token = generateToken({
       userId: user._id,
       universityId: user.universityId?._id,
-      role: user.role
+      role: user.role,
+      tokenVersion: user.tokenVersion
     });
 
     res.status(200).json({
@@ -294,6 +295,7 @@ const resetPassword = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, 10);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
+    user.tokenVersion += 1; // Eski token'ları geçersiz kıl
     await user.save();
 
     return res.status(200).json({ message: "Şifre başarıyla güncellendi." });
@@ -451,6 +453,7 @@ const profileResetPassword = async (req, res) => {
 
     // Şifreyi güncelle
     user.password = await bcrypt.hash(newPassword, 10);
+    user.tokenVersion += 1; // Eski token'ları geçersiz kıl
     await user.save();
 
     return res.status(200).json({ message: "Şifre başarıyla güncellendi" });

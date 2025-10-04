@@ -4557,6 +4557,23 @@
  *                 likes:
  *                   type: integer
  *                   description: "Hedef içeriğin güncel beğeni sayısı."
+ *                 myReaction:
+ *                   type: object
+ *                   nullable: true
+ *                   description: "Kullanıcının mevcut reaction durumu (null ise reaction yok)"
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [like, dislike, report]
+ *                       example: "like"
+ *                     description:
+ *                       type: string
+ *                       nullable: true
+ *                       example: null
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-10-04T12:13:12.425Z"
  *       400:
  *         description: Geçersiz targetType
  *       401:
@@ -4608,6 +4625,23 @@
  *                 dislikes:
  *                   type: integer
  *                   description: "Hedef içeriğin güncel beğenmeme sayısı."
+ *                 myReaction:
+ *                   type: object
+ *                   nullable: true
+ *                   description: "Kullanıcının mevcut reaction durumu (null ise reaction yok)"
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [like, dislike, report]
+ *                       example: "dislike"
+ *                     description:
+ *                       type: string
+ *                       nullable: true
+ *                       example: null
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-10-04T12:13:12.425Z"
  *       400:
  *         description: Geçersiz targetType
  *       401:
@@ -4676,6 +4710,23 @@
  *                 isActive:
  *                   type: boolean
  *                   description: "Notun aktiflik durumu (yalnızca not hedeflerinde döner)."
+ *                 myReaction:
+ *                   type: object
+ *                   nullable: true
+ *                   description: "Kullanıcının mevcut reaction durumu (null ise reaction yok)"
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [like, dislike, report]
+ *                       example: "report"
+ *                     description:
+ *                       type: string
+ *                       nullable: true
+ *                       example: "Spam içerik"
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-10-04T12:13:12.425Z"
  *       400:
  *         description: Geçersiz targetType
  *       401:

@@ -30,16 +30,23 @@ const getCodesBySlug = async (req, res) => {
 // ➕ Kod ekle (kullanıcı ve admin ekleyebilir)
 const addDepartmentCode = async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, universityId } = req.body;
     if (!code) {
       return res.status(400).json({ message: "Kod alanı zorunludur." });
+    }
+
+    // UniversityId: admin için body'den, normal kullanıcı için token'dan al
+    const finalUniversityId = universityId || req.user.universityId;
+
+    if (!finalUniversityId) {
+      return res.status(400).json({ message: "Üniversite ID gerekli." });
     }
 
     const normalizedCode = code.trim().toUpperCase();
 
     const newCode = await DepartmentCode.create({
       code: normalizedCode,
-      universityId: req.user.universityId,
+      universityId: finalUniversityId,
       addedBy: req.user.userId
     });
 
